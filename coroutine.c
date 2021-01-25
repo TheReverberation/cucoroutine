@@ -13,9 +13,7 @@ coro_make(
     coro->func = func;
     coro->status = CORO_NOT_EXEC;
     coro->id = ++id;
-    void *stack = malloc(1 << 16);
-    assert(stack);
-    coro->stack = stack + (1 << 16) - 1;
+    coro->stack = malloc(1 << 16);
     return coro;
 }
 
