@@ -10,7 +10,7 @@
 
 
 
-#define AS_REACTOR_MAX_COROS 1024
+#define AS_REACTOR_MAX_COROS 4096LL
 
 typedef struct async_reactor {  
     coroutine_t *coros[AS_REACTOR_MAX_COROS];

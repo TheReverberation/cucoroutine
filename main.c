@@ -48,13 +48,26 @@ int main() {
     printf("main end\n");
     return 0;
 }*/
+
 int coro_calls = 0;
+
+void coro2() {
+    //exit(-1);
+    int calls = coro_calls;
+    printf("coro2: %d 1\n", calls);
+    aio_coro_yield();
+    printf("coro2: %d 2\n", calls);
+    aio_coro_exit();
+}
+
+
 void coro1() {
     int calls = ++coro_calls;
     for (size_t i = 0; i < 10; ++i) {
         for (size_t j = 100 * i; j < 100 * (i + 1); ++j) {
             printf("coro1: %d %ld\n", calls, j);
         }
+        aio_add_coro(coro_make(coro2));
         aio_coro_yield();
     }
     aio_coro_exit();

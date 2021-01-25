@@ -9,6 +9,7 @@ typedef struct coroutine {
     coro_func_t func;
     enum coro_status status;
     ucontext_t context;
+    void *stack;
     int id;
 } coroutine_t;
 
