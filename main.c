@@ -57,7 +57,7 @@ void coro2() {
     printf("coro2: %d 1\n", calls);
     aio_coro_yield();
     printf("coro2: %d 2\n", calls);
-    aio_coro_exit();
+    //aio_coro_exit();
 }
 
 
@@ -67,7 +67,8 @@ void coro1() {
         for (size_t j = 100 * i; j < 100 * (i + 1); ++j) {
             printf("coro1: %d %ld\n", calls, j);
         }
-        aio_add_coro(coro_make(coro2));
+        coro2();
+        //aio_add_coro(coro_make(coro2));
         aio_coro_yield();
     }
     aio_coro_exit();

@@ -5,7 +5,6 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "run_on_stack.h"
 
 void 
 async_reactor_init(
@@ -46,7 +45,12 @@ async_reactor_resume_coro(
     coroutine_t *coro = async_reactor_get_current_coro(reactor);
     if (coro->status == CORO_NOT_EXEC) {
         coro->status = CORO_PAUSE;
-        run_on_stack(coro->stack, coro->func);
+        getcontext(&(coro->context));
+        coro->context.uc_stack.ss_sp = coro->stack;
+        coro->context.uc_stack.ss_size = 1 << 16;
+        coro->context.uc_link = NULL;
+        makecontext(&(coro->context), coro->func, 0);
+        //run_on_stack(coro->stack, coro->func);
     } else if (coro->status == CORO_PAUSE) {
         setcontext(&coro->context);
     } else if (coro->status == CORO_DONE) {
