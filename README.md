@@ -1,2 +1,2 @@
-# ucoroutine
-Ucoroutine(ucontext + coroutine) is a **ucontext.h** realisation of coroutine concurrency.
+# CUcoroutine
+CUcoroutine(C + ucontext + coroutine) is a **ucontext.h** realisation of coroutine concurrency.
