@@ -12,11 +12,12 @@ aio_init() {
 }
 
 
-bool
+coroutine_t *
 aio_add_coro(
-    coroutine_t *coro
+    coro_func_t func,
+    void *args
 ) {
-    return async_reactor_add_coro(&default_reactor, coro);
+    return async_reactor_add_coro(&default_reactor, func, args);
 }
 
 
@@ -34,6 +35,6 @@ aio_coro_exit() {
 
 
 void 
-aio_coro_yield() {
-    async_reactor_yield(&default_reactor);
+aio_coro_yield(guint64 run_after_u) {
+    async_reactor_yield(&default_reactor, run_after_u);
 }

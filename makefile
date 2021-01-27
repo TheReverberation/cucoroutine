@@ -1,10 +1,13 @@
 all: main
 
 CC = clang
-CFLAGS = -Wall -std=c11 -lm -O3 
+CFLAGS = -Wall -std=c11 -lm  -g3
+
+CFLAGS += `pkg-config --cflags glib-2.0`
+CFLAGS += `pkg-config --libs glib-2.0`
 
 main: main.c aio.o async_reactor.o coroutine.o coro_status.o
-	$(CC) -o main main.c aio.o async_reactor.o coroutine.o coro_status.o $(CFLAGS)
+	$(CC) -o main main.c aio.o async_reactor.o coroutine.o coro_status.o -lpthread $(CFLAGS)
 
 aio.o: aio.h aio.c 
 	$(CC) -o aio.o -c aio.c $(CFLAGS)

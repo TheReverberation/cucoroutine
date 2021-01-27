@@ -7,6 +7,7 @@
 
 typedef struct coroutine {
     coro_func_t func;
+    void *args;
     enum coro_status status;
     ucontext_t context;
     void *stack;
@@ -14,7 +15,7 @@ typedef struct coroutine {
 } coroutine_t;
 
 coroutine_t *
-coro_make(coro_func_t func);
+coro_make(coro_func_t func, void *args);
 
 void 
 coro_delete(coroutine_t *coro);

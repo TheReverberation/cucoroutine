@@ -10,9 +10,10 @@ extern async_reactor_t default_reactor;
 void 
 aio_init();
 
-bool
+coroutine_t *
 aio_add_coro(
-    coroutine_t *coro
+    coro_func_t func,
+    void *args
 );
 
 void
@@ -26,4 +27,4 @@ aio_coro_exit();
     } \ */
 
 void 
-aio_coro_yield();
+aio_coro_yield(guint64 run_after_u);

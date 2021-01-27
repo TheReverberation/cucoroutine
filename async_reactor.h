@@ -3,6 +3,9 @@
 
 #include "coroutine.h"
 
+
+#include <glib.h>
+
 #include <ucontext.h>
 
 #include <stdint.h>
@@ -13,11 +16,11 @@
 #define AS_REACTOR_MAX_COROS 4096LL
 
 typedef struct async_reactor {  
-    coroutine_t *coros[AS_REACTOR_MAX_COROS];
     uint32_t size;
-    int current_coro;
+    coroutine_t *current_coro;
     int caller;
-    ucontext_t backpoint;
+    ucontext_t context;
+    GTree *schedule; // tree of pair<guint64, coroutine_t>
 } async_reactor_t;
 
 
@@ -26,14 +29,16 @@ async_reactor_init(
     async_reactor_t *reactor
 );
 
-bool 
+coroutine_t *
 async_reactor_add_coro(
     async_reactor_t *reactor,
-    coroutine_t *coro
+    coro_func_t func,
+    void *args
 );
 
 void async_reactor_yield(
-    async_reactor_t *reactor
+    async_reactor_t *reactor,
+    guint64 run_after_u
 );
 
 void 
