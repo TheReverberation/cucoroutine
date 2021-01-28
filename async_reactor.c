@@ -42,10 +42,6 @@ async_reactor_add_coro(
     coro_func_t func,
     void *args
 ) {
-    /*if (reactor->size < AS_REACTOR_MAX_COROS) {
-        reactor->coros[reactor->size++] = coro;
-        return true;
-    }*/
     guint64 *now = malloc(sizeof(guint64));
     *now = g_get_monotonic_time();
     coroutine_t *coro = coro_make(func, args);
@@ -75,7 +71,6 @@ async_reactor_resume_coro(
         coro->context.uc_link = NULL;
         makecontext(&(coro->context), (void (*)(void))coro->func, 1, coro->args);
         setcontext(&(coro->context));
-        //run_on_stack(coro->stack, coro->func);
     } else if (coro->status == CORO_PAUSE) {
         setcontext(&coro->context);
     } else if (coro->status == CORO_DONE) {
@@ -116,24 +111,6 @@ void
 async_reactor_run(
     async_reactor_t *reactor
 ) {
-    /*
-    bool has_undone_core = true;
-    while (has_undone_core) {
-        has_undone_core = false;
-        for (size_t i = 0; i < reactor->size; ++i) {
-            reactor->current_coro = i;
-            reactor->caller = 0;
-            getcontext(&(reactor->context));
-            if (reactor->caller == 0) {
-                async_reactor_resume_coro(reactor);
-            }
-            if (async_reactor_get_current_coro(reactor) != NULL && 
-                async_reactor_get_current_coro(reactor)->status != CORO_DONE
-            ) {
-                has_undone_core = true;
-            }
-        } 
-    }*/
     while (g_tree_nnodes(reactor->schedule) > 0) {
         struct schedule_pair first;
         g_tree_first(reactor->schedule, &first);
@@ -179,7 +156,6 @@ async_reactor_coro_exit(
 ) {
     coroutine_t *coro = async_reactor_get_current_coro(reactor);
     coro->status = CORO_DONE;
-    //coro_delete(async_reactor_get_current_coro(reactor));
     reactor->caller = coro->id;
     setcontext(&(reactor->context));
 }
