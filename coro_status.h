@@ -2,7 +2,7 @@
 
 typedef enum coro_status {
     CORO_NOT_EXEC,
-    CORO_PAUSE,
+    CORO_RUNNING,
     CORO_DONE,
     CORO_STATUS_END
 } coro_status_t;

@@ -1,30 +1,25 @@
 #pragma once
 
+
+#include "async_channel.h"
+#include "async_event.h"
 #include "async_reactor.h"
 #include "coroutine.h"
 
-#include <stdbool.h>
 
 extern async_reactor_t default_reactor;
 
-void 
-aio_init();
+inline void 
+aio_init() {
+    coro_status_name_init();
+    async_reactor_init(&default_reactor);
+}
 
-coroutine_t *
-aio_add_coro(
-    coro_func_t func,
-    void *args
-);
+#define aio_make_coro(f, a) async_reactor_make_coro(&default_reactor, f, a)
+#define aio_run() async_reactor_run(&default_reactor)
+#define aio_coro_exit() async_reactor_coro_exit(&default_reactor)
+#define aio_yield_at_time(t) async_reactor_yield_at_time(&default_reactor, t)
 
-void
-aio_run();
+#define aio_chan_open(cap) async_chan_open(&default_reactor, cap)
 
-void 
-aio_coro_exit();
-
-/* #define aio_coro_yield() if (setjmp(async_reactor_get_current_coro(&default_reactor)->context.backpoint) == 0) { \
-        longjmp(default_reactor.backpoint, 1);            \
-    } \ */
-
-void 
-aio_coro_yield(guint64 run_after_u);
+#define aio_event_init(event, poller) async_event_init(event, poller, &default_reactor)
