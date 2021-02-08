@@ -5,8 +5,6 @@
 #include "async_channel.h"
 
 
-#include <stdbool.h>
-
 async_chan_t *chan;
 
 
@@ -34,12 +32,10 @@ void reader(void *data) {
     size_t i = 0;
     int *n = async_chan_read(chan);
     ++i;
-    while (i != 10000) {
-        //printf("%d^2 %d\n", *n, *n * *n);
+    for (; i < 10000; ++i) {
+        printf("%d^2 %d\n", *n, *n * *n);
         free(n);
         n = async_chan_read(chan);
-        ++i;
-        //printf("i = %d\n", i);
     }
     free(n);
     async_chan_close(chan);
