@@ -11,8 +11,14 @@ endif
 CFLAGS += `pkg-config --cflags glib-2.0`
 GLIB = `pkg-config --libs glib-2.0`
 
-main: main.c aio.o async_reactor.o coroutine.o coro_status.o async_event.o cyclic_buffer.o async_channel.o
-	$(CC) -o main main.c aio.o async_reactor.o coroutine.o coro_status.o async_event.o async_channel.o cyclic_buffer.o $(GLIB) $(CFLAGS)
+main: main.c libcucoroutine.a
+	$(CC) -o main main.c -L. -lcucoroutine $(GLIB) $(CFLAGS)
+
+libcucoroutine.a: aio.o async_reactor.o coroutine.o coro_status.o async_event.o cyclic_buffer.o async_channel.o
+	ar ru libcucoroutine.a aio.o async_reactor.o coroutine.o coro_status.o async_event.o cyclic_buffer.o async_channel.o
+	ranlib libcucoroutine.a
+
+
 
 aio.o: aio.h aio.c 
 	$(CC) -o aio.o -c aio.c $(CFLAGS)
