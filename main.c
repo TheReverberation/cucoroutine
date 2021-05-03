@@ -1,58 +1,41 @@
 #include <stdio.h>
 
+
+#include <pthread.h>
+
 #include "aio.h"
-#include "async_event.h"
-#include "async_channel.h"
+#include <unistd.h>
+#include "errors.h"
 
 
-async_chan_t *chan;
-
-
-void writer1(void *data) {
-    printf("writer1 isd %d\n", async_reactor_get_current_coro(&default_reactor)->id);
-    for (size_t i = 0; i < 5000; ++i) {
-        int *n = malloc(sizeof(int));
-        *n = 2 * i;
-        async_chan_send(chan, n);
-        aio_yield_at_time(25);
+void coro1(void *args) {
+    for (int i = 0; i < 10000; ++i) {
+        printf("coro1 running\n");
+        aio_yield_at_time(500 MS);
     }
+    
 }
 
-void writer2(void *data) {
-    for (size_t i = 0; i < 5000; ++i) {
-        int *n = malloc(sizeof(int));
-        *n = 2 * i + 1;
-        async_chan_send(chan, n);
-        aio_yield_at_time(50);
+void coro_with_compute(void *arg) {
+    printf("coro comp start tid = %d\n", gettid());
+    aio_begin_compute();
+    for (int i = 0; i < 10; ++i) {
+        usleep(100000);
+        printf("compute %d%% in tid = %d\n", i * 10, gettid());
     }
+    aio_end_compute();
+    printf("computed tid = %d\n", gettid());
 }
 
-
-void reader(void *data) {
-    size_t i = 0;
-    int *n = async_chan_read(chan);
-    ++i;
-    for (; i < 10000; ++i) {
-        printf("%d^2 %d\n", *n, *n * *n);
-        free(n);
-        n = async_chan_read(chan);
-    }
-    free(n);
-    async_chan_close(chan);
-}
-
-
-void coro_main(void *arg) {
-    chan = async_chan_open(&default_reactor, 100);
-    aio_make_coro(writer1, NULL);
-    aio_make_coro(reader, NULL);
-    aio_make_coro(writer2, NULL);
-}
+#include <errno.h>
 
 int main() {
+    printf("debug ? = %d\n", AIO_DEBUG);
+    g_tree_insert(NULL, NULL, NULL);
+    printf("main tid = %d\n", gettid());
     aio_init();
-    aio_make_coro(coro_main, NULL);
-    aio_run();
+    aio_make_coro(coro1, NULL);
+    aio_make_coro(coro_with_compute, NULL);
     return 0;
 }
 

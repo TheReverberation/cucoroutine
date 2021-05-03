@@ -1,15 +1,15 @@
 #pragma once
 
+#include <errno.h>
 #include <stdbool.h>
-
 #include <ucontext.h>
 
 #include "coro_status.h"
+#include "errors.h"
 
 typedef struct async_reactor async_reactor_t;
 
 typedef void (*coro_func_t)(void *);
-
 
 typedef struct coroutine {
     coro_func_t func;
@@ -27,7 +27,7 @@ coro_make(
     async_reactor_t *reactor
 );
 
-bool
+aio_err_t
 coro_init(
     coroutine_t *coro,
     coro_func_t func,
@@ -42,7 +42,7 @@ _coro_goto_begin(
 );
 
 void 
-back_to_coro(
+_back_to_coro(
     coroutine_t *coro
 );
 

@@ -5,6 +5,8 @@
 #include "async_event.h"
 #include "async_reactor.h"
 #include "cyclic_buffer.h"
+#include "errors.h"
+
 
 #define ASYNC_CHAN_MAX_WRITERS 1024
 
@@ -21,10 +23,11 @@ typedef struct async_chan {
 async_chan_t *
 async_chan_open(async_reactor_t *reactor, uint32_t cap);
 
-void
+aio_err_t
 async_chan_send(async_chan_t *chan, void *data);
 
 void *
 async_chan_read(async_chan_t *chan);
 
-void async_chan_close(async_chan_t *chan);
+void 
+async_chan_close(async_chan_t *chan);

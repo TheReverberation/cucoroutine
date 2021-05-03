@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "errors.h"
 
 typedef struct {
     void **data;
@@ -12,7 +13,7 @@ typedef struct {
     int32_t size;
 } cyclic_buffer_t;
 
-bool 
+aio_err_t
 cyclic_buffer_init(
     cyclic_buffer_t *buffer,
     uint32_t cap
@@ -23,6 +24,7 @@ void
 cyclic_buffer_deinit(
     cyclic_buffer_t *buffer
 );
+
 
 void 
 cyclic_buffer_push(
@@ -39,6 +41,7 @@ bool
 cyclic_buffer_is_empty(
     cyclic_buffer_t *buffer
 );
+
 
 bool
 cyclic_buffer_is_full(
