@@ -1,15 +1,13 @@
 all: main
 
 
-
-
 CC = clang
 BUILD_TYPE = debug
 CFLAGS = -Wall -std=c11 -O3
 
 SOURCE_DIR = src
 INCLUDE_DIR = include
-BUILD_DIR = bin
+BUILD_DIR = build
 
 CFLAGS += -I$(INCLUDE_DIR)
 
@@ -25,20 +23,19 @@ GLIB = `pkg-config --libs glib-2.0`
 SOURCES := $(wildcard $(SOURCE_DIR)/*.c) # src/foo.c
 OBJECTS := $(SOURCES:$(SOURCE_DIR)/%=$(BUILD_DIR)/%.o) # src/foo.c -> build/foo.c.o
 
-main: main.c libcucoroutine.a
-	$(CC) -o main main.c -lcucoroutine -L. -lpthread $(GLIB) $(CFLAGS)
+main: main.c lib/libcucoroutine.a
+	$(CC) -o main main.c -lcucoroutine -Llib/ -lpthread $(GLIB) $(CFLAGS)
 
-libcucoroutine.a: $(OBJECTS)
-	echo $^
-	ar rcs libcucoroutine.a $^
-	ranlib libcucoroutine.a
+lib/libcucoroutine.a: $(OBJECTS)
+	ar rcs lib/libcucoroutine.a $^
+	ranlib lib/libcucoroutine.a
 
 # 
 $(OBJECTS):$(BUILD_DIR)/%.o:$(SOURCE_DIR)/%
-	echo $@:$?
 	$(CC) -o $@ -c $? $(CFLAGS)
 
 clean:
-	rm *.o
-
+	rm -r -f build/ lib/
+	mkdir build
+	mkdir lib
 rebuild: clean main

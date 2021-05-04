@@ -33,7 +33,7 @@ run_time_cmp(
 
 
 
-void 
+aio_err_t 
 async_reactor_init(
     async_reactor_t *reactor
 ) {
@@ -80,9 +80,9 @@ async_reactor_resume_coro(
     coroutine_t *coro = async_reactor_get_current_coro(reactor);
     if (coro->status == CORO_NOT_EXEC) {
         coro->status = CORO_RUNNING;
-        back_to_coro(coro);
+        _back_to_coro(coro);
     } else if (coro->status == CORO_RUNNING) {
-        back_to_coro(coro);
+        _back_to_coro(coro);
     } else if (coro->status == CORO_DONE) {
         reactor->caller = coro->id;
         return;
@@ -149,7 +149,7 @@ async_reactor_destroy(
     g_tree_destroy(reactor->schedule);
 }
 
-void 
+aio_err_t 
 async_reactor_run(
     async_reactor_t *reactor
 ) {

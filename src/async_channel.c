@@ -44,7 +44,7 @@ async_chan_open(
     return chan;
 }
 
-void
+aio_err_t
 async_chan_send(
     async_chan_t *chan, 
     void *data

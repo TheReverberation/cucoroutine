@@ -6,7 +6,7 @@
 #include "cyclic_buffer.h"
 
 
-bool 
+aio_err_t 
 cyclic_buffer_init(
     cyclic_buffer_t *buffer,
     uint32_t cap

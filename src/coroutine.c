@@ -3,8 +3,10 @@
 
 #include <glib.h>
 
-#include "coroutine.h"
-#include "async_reactor.h"
+#include <coroutine.h>
+#include <async_reactor.h>
+
+
 
 static int32_t id = 0;
 
@@ -30,7 +32,7 @@ coro_runner(
     async_reactor_coro_exit(reactor);
 }
 
-bool
+aio_err_t
 coro_init(
     coroutine_t *coro,
     coro_func_t func,
@@ -66,7 +68,7 @@ _coro_goto_begin(
 }
 
 void 
-back_to_coro(
+_back_to_coro(
     coroutine_t *coro
 ) {
     setcontext(&(coro->context));
