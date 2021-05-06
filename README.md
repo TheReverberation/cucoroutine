@@ -20,7 +20,7 @@ void writer1(void *data) {
         int *n = malloc(sizeof(int));
         *n = 2 * i;
         async_chan_send(chan, n);
-        aio_yield_at_time(25);
+        cu_yield_at_time(25);
     }
 }
 
@@ -29,7 +29,7 @@ void writer2(void *data) {
         int *n = malloc(sizeof(int));
         *n = 2 * i + 1;
         async_chan_send(chan, n);
-        aio_yield_at_time(50);
+        cu_yield_at_time(50);
     }
 }
 
@@ -50,15 +50,15 @@ void reader(void *data) {
 
 void coro_main(void *arg) {
     chan = async_chan_open(&default_reactor, 100);
-    aio_make_coro(writer1, NULL);
-    aio_make_coro(reader, NULL);
-    aio_make_coro(writer2, NULL);
+    cu_make_coro(writer1, NULL);
+    cu_make_coro(reader, NULL);
+    cu_make_coro(writer2, NULL);
 }
 
 int main() {
-    aio_init();
-    aio_make_coro(coro_main, NULL);
-    aio_run();
+    cu_init();
+    cu_make_coro(coro_main, NULL);
+    cu_run();
     return 0;
 }
 ```
@@ -125,8 +125,8 @@ Every time when a coroutine yields until an event, the event adds the coroutine 
 **Async channels** are data channels used to automatic non-blocking I/O.
 ```c
 typedef struct async_chan {
-    cyclic_buffer_t buffer;
-    cyclic_buffer_t writers;
+    cu_cyclic_buffer_t buffer;
+    cu_cyclic_buffer_t writers;
     bool notify_writers_ran;
     coroutine_t *notify_writers;
     coroutine_t *reader;   

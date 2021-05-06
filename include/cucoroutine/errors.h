@@ -8,15 +8,15 @@
 /*!
  * Error type
  */
-typedef int32_t aio_err_t; 
+typedef int32_t cu_err_t; 
 
 /*!
  * Global error variable such as errno.
  */
-extern aio_err_t aio_errno;
-void aio_seterrno(aio_err_t err);
-void aio_ok();
-void aio_fail();
+extern cu_err_t cu_errno;
+void cu_seterrno(cu_err_t err);
+void cu_ok();
+void cu_fail();
 
 enum {
     AE_OK = 0, ///< no error
@@ -29,5 +29,5 @@ enum {
 };
 
 
-#define aio_error_if(err, cond) if (cond) {aio_seterrno(err);}
-#define aio_error_if_and_return(err, cond, ret) if (cond) {aio_seterrno(err); return ret;}
+#define cu_error_if(err, cond) if (cond) {cu_seterrno(err);}
+#define cu_error_if_and_return(err, cond, ret) if (cond) {cu_seterrno(err); return ret;}

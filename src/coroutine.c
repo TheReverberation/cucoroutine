@@ -3,41 +3,41 @@
 
 #include <glib.h>
 
+#include <reactor.h>
 #include <coroutine.h>
-#include <async_reactor.h>
 
 
 
 static int32_t id = 0;
 
-coroutine_t *
-coro_make(
-    coro_func_t func,
+cu_coroutine_t *
+cu_make(
+    cu_func_t func,
     void *args,
-    async_reactor_t *reactor
+    cu_reactor_t *reactor
 ) {
     g_assert(func);
-    coroutine_t *coro = malloc(sizeof(coroutine_t));
+    cu_coroutine_t *coro = malloc(sizeof(cu_coroutine_t));
     g_assert(coro);
-    coro_init(coro, func, args, reactor);
+    cu_coro_init(coro, func, args, reactor);
     return coro;
 }
 
 static void
 coro_runner(
-    async_reactor_t *reactor,
-    coroutine_t *coro
+    cu_reactor_t *reactor,
+    cu_coroutine_t *coro
 ) {
     coro->func(coro->args);
-    async_reactor_coro_exit(reactor);
+    cu_reactor_coro_exit(reactor);
 }
 
-aio_err_t
-coro_init(
-    coroutine_t *coro,
-    coro_func_t func,
+cu_err_t
+cu_coro_init(
+    cu_coroutine_t *coro,
+    cu_func_t func,
     void *args,
-    async_reactor_t *reactor
+    cu_reactor_t *reactor
 ) {
     assert(coro);
     assert(func);
@@ -57,8 +57,8 @@ coro_init(
 
 void
 _coro_goto_begin(
-    coroutine_t *coro,
-    async_reactor_t *reactor
+    cu_coroutine_t *coro,
+    cu_reactor_t *reactor
 ) {
     getcontext(&(coro->context));
     coro->context.uc_stack.ss_sp = coro->stack;
@@ -69,14 +69,14 @@ _coro_goto_begin(
 
 void 
 _back_to_coro(
-    coroutine_t *coro
+    cu_coroutine_t *coro
 ) {
     setcontext(&(coro->context));
 }
 
 void
-coro_destroy(
-    coroutine_t *coro
+cu_coro_destroy(
+    cu_coroutine_t *coro
 ) {
     if (coro->status != CORO_DONE) {
         g_warning("Coro [id = %d] is deleted but not done", coro->id);

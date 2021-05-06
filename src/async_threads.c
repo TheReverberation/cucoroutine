@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include <sys/types.h>
 
 #include <glib.h>
@@ -17,7 +19,7 @@ pid_compare(
 }
 
 void
-async_threads_init() {
+_cu_threads_init() {
     thread_metadata = g_tree_new_full(pid_compare, NULL, free, free);
 }
 
@@ -38,14 +40,14 @@ getmeta(pthread_t thr) {
 
 static void *
 compute(void *arg) {
-    coroutine_t *coro = arg;
+    cu_coroutine_t *coro = arg;
     setmeta(pthread_self(), coro);
     setcontext(&coro->context);
 }
 
 void 
-begin_compute(async_reactor_t *reactor) {
-    coroutine_t *coro = async_reactor_get_current_coro(reactor);
+cu_begin_compute(cu_reactor_t *reactor) {
+    cu_coroutine_t *coro = cu_reactor_get_current_coro(reactor);
     coro->status = CORO_RUNNUNG_IN_THREAD;
     reactor->caller = coro->id;
     volatile bool to_reactor = true;
@@ -59,13 +61,13 @@ begin_compute(async_reactor_t *reactor) {
 }
 
 void 
-end_compute(async_reactor_t *reactor) {
-    coroutine_t *thread_coro = getmeta(pthread_self());
+cu_end_compute(cu_reactor_t *reactor) {
+    cu_coroutine_t *thread_coro = getmeta(pthread_self());
     getcontext(&thread_coro->context);
     if (thread_coro->status == CORO_RUNNUNG_IN_THREAD) {
         thread_coro->status = CORO_RUNNING;
         pthread_mutex_lock(&reactor->mutex);
-        async_reactor_add_coro(reactor, thread_coro);
+        cu_reactor_add_coro(reactor, thread_coro);
         pthread_mutex_unlock(&reactor->mutex);
         pthread_exit(NULL);
     }

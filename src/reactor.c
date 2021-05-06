@@ -6,7 +6,7 @@
 
 #include <unistd.h>
 
-#include "async_reactor.h"
+#include "reactor.h"
 
 static gint
 run_time_cmp(
@@ -33,31 +33,31 @@ run_time_cmp(
 
 
 
-aio_err_t 
-async_reactor_init(
-    async_reactor_t *reactor
+cu_err_t 
+cu_reactor_init(
+    cu_reactor_t *reactor
 ) {
     reactor->caller = -1;
     reactor->current_coro = NULL;
-    reactor->maked_coros = g_array_new(FALSE, FALSE, sizeof(coroutine_t *));
+    reactor->maked_coros = g_array_new(FALSE, FALSE, sizeof(cu_coroutine_t *));
     reactor->schedule = g_tree_new_full(run_time_cmp, NULL, free, NULL);
 }
 
 void
-async_reactor_make_coro(
-    async_reactor_t *reactor,
-    coro_func_t func,
+cu_reactor_make_coro(
+    cu_reactor_t *reactor,
+    cu_func_t func,
     void *args
 ) {
-    coroutine_t *coro = coro_make(func, args, reactor);
+    cu_coroutine_t *coro = cu_make(func, args, reactor);
     g_array_append_val(reactor->maked_coros, coro);
-    async_reactor_add_coro(reactor, coro);
+    cu_reactor_add_coro(reactor, coro);
 }
 
 void
-async_reactor_add_coro(
-    async_reactor_t *reactor,
-    coroutine_t *coro
+cu_reactor_add_coro(
+    cu_reactor_t *reactor,
+    cu_coroutine_t *coro
 ) {
     guint64 *now = malloc(2 * sizeof(uint64_t));
     now[0] = g_get_monotonic_time();
@@ -65,19 +65,19 @@ async_reactor_add_coro(
     g_tree_insert(reactor->schedule, now, coro);
 }
 
-coroutine_t *
-async_reactor_get_current_coro(
-    async_reactor_t *reactor
+cu_coroutine_t *
+cu_reactor_get_current_coro(
+    cu_reactor_t *reactor
 ) {
     return reactor->current_coro;
 }
 
 
 void 
-async_reactor_resume_coro(
-    async_reactor_t *reactor
+cu_reactor_resume_coro(
+    cu_reactor_t *reactor
 ) {
-    coroutine_t *coro = async_reactor_get_current_coro(reactor);
+    cu_coroutine_t *coro = cu_reactor_get_current_coro(reactor);
     if (coro->status == CORO_NOT_EXEC) {
         coro->status = CORO_RUNNING;
         _back_to_coro(coro);
@@ -93,7 +93,7 @@ async_reactor_resume_coro(
 
 struct schedule_pair {
     guint64 const *run_time;
-    coroutine_t *coro;
+    cu_coroutine_t *coro;
 };
 
 static gboolean
@@ -113,7 +113,7 @@ stop_at_first(
 //     gpointer _coro,
 //     gpointer user_data
 // ) {
-//     coroutine_t *coro = _coro;
+//     cu_coroutine_t *coro = _coro;
 //     printf("[id = %d]\n", coro->id);
 //     return FALSE;
 // }
@@ -136,22 +136,22 @@ g_tree_first(
 }
 
 static void
-async_reactor_destroy(
-    async_reactor_t *reactor
+cu_reactor_destroy(
+    cu_reactor_t *reactor
 ) {
     for (size_t i = 0; i < reactor->maked_coros->len; ++i) {
-        coroutine_t *coro = g_array_index(reactor->maked_coros, coroutine_t *, i);
+        cu_coroutine_t *coro = g_array_index(reactor->maked_coros, cu_coroutine_t *, i);
         //printf("coro[id = %d] destroyed\n", coro->id);
-        coro_destroy(coro);
+        cu_coro_destroy(coro);
         free(coro);
     }
     g_array_free(reactor->maked_coros, TRUE);
     g_tree_destroy(reactor->schedule);
 }
 
-aio_err_t 
-async_reactor_run(
-    async_reactor_t *reactor
+cu_err_t 
+cu_reactor_run(
+    cu_reactor_t *reactor
 ) {
     while (g_tree_nnodes(reactor->schedule) > 0) {
         //g_tree_print_all(reactor->schedule);
@@ -159,7 +159,7 @@ async_reactor_run(
         g_tree_first(reactor->schedule, &first);
 
         guint64 const run_time = *(first.run_time);
-        coroutine_t *coro = first.coro;
+        cu_coroutine_t *coro = first.coro;
         //printf("%s coro: %d\n", __func__, coro->id);
         g_tree_remove(reactor->schedule, first.run_time);
         guint64 const now = g_get_monotonic_time();
@@ -170,19 +170,19 @@ async_reactor_run(
         reactor->caller = 0;
         getcontext(&(reactor->context));
         if (reactor->caller == 0) {
-            async_reactor_resume_coro(reactor);
+            cu_reactor_resume_coro(reactor);
         }
     }
-    async_reactor_destroy(reactor);
+    cu_reactor_destroy(reactor);
 }
 
 
 
-void async_reactor_yield_at_time(
-    async_reactor_t *reactor,
+void cu_reactor_yield_at_time(
+    cu_reactor_t *reactor,
     guint64 run_after_u
 ) {
-    coroutine_t *coro = async_reactor_get_current_coro(reactor);
+    cu_coroutine_t *coro = cu_reactor_get_current_coro(reactor);
     guint64 *run_time = malloc(2 * sizeof(uint64_t));
     run_time[0] = g_get_monotonic_time() + run_after_u;
     run_time[1] = coro->id;
@@ -196,10 +196,10 @@ void async_reactor_yield_at_time(
 
 
 void
-async_reactor_coro_exit(
-    async_reactor_t *reactor
+cu_reactor_coro_exit(
+    cu_reactor_t *reactor
 ) {
-    coroutine_t *coro = async_reactor_get_current_coro(reactor);
+    cu_coroutine_t *coro = cu_reactor_get_current_coro(reactor);
     coro->status = CORO_DONE;
     reactor->caller = coro->id;
     setcontext(&(reactor->context));

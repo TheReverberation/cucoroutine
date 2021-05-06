@@ -17,35 +17,35 @@
 
 /*!
  * Implements switching between coroutines according to time.
- * Automatically frees memory of coroutines maked with async_reactor_make_coro().
+ * Automatically frees memory of coroutines maked with cu_reactor_make_coro().
  */
-typedef struct async_reactor {  
-    GArray *maked_coros; // coroutine_t * array
-    coroutine_t *current_coro;
+typedef struct cu_reactor {  
+    GArray *maked_coros; // cu_coroutine_t * array
+    cu_coroutine_t *current_coro;
     int caller;
     ucontext_t context;
-    GTree *schedule; // tree of pair<guint64[2] = {runtime, coro.id}, coroutine_t>
+    GTree *schedule; // tree of pair<guint64[2] = {runtime, coro.id}, cu_coroutine_t>
     pthread_mutex_t mutex;
-} async_reactor_t;
+} cu_reactor_t;
 
 /*!
  * Initialize reactor.
  * \param[out] reactor - not null pointer to reactor
  * \return error code
  */
-aio_err_t
-async_reactor_init(
-    async_reactor_t *reactor
+cu_err_t
+cu_reactor_init(
+    cu_reactor_t *reactor
 );
 
 /*!
  * Create new coroutine and add one to array for the next freeing. 
- * See #coro_make(), #async_reactor_run().
+ * See #coro_make(), #cu_reactor_run().
  */
 void
-async_reactor_make_coro(
-    async_reactor_t *reactor,
-    coro_func_t func,
+cu_reactor_make_coro(
+    cu_reactor_t *reactor,
+    cu_func_t func,
     void *args
 );
 
@@ -55,24 +55,24 @@ async_reactor_make_coro(
  * \param[in] coro - coroutine pointer
  */
 void
-async_reactor_add_coro(
-    async_reactor_t *reactor,
-    coroutine_t *coro
+cu_reactor_add_coro(
+    cu_reactor_t *reactor,
+    cu_coroutine_t *coro
 );
 
 /*!
- * Stop current coroutine, add one to schedule, switch to async_reactor_run().
+ * Stop current coroutine, add one to schedule, switch to cu_reactor_run().
  */
 void
-async_reactor_yield_at_time(
-    async_reactor_t *reactor,
+cu_reactor_yield_at_time(
+    cu_reactor_t *reactor,
     guint64 run_after_u
 );
 
 
 void 
-async_reactor_resume_coro(
-    async_reactor_t *reactor
+cu_reactor_resume_coro(
+    cu_reactor_t *reactor
 );
 
 /*!
@@ -81,22 +81,22 @@ async_reactor_resume_coro(
  * Sometimes it unlocks its mutex so that threads can use reactor.
  * \return error code.
  */
-aio_err_t 
-async_reactor_run(
-    async_reactor_t *reactor
+cu_err_t 
+cu_reactor_run(
+    cu_reactor_t *reactor
 );
 
-coroutine_t *
-async_reactor_get_current_coro(
-    async_reactor_t *reactor
+cu_coroutine_t *
+cu_reactor_get_current_coro(
+    cu_reactor_t *reactor
 );
 
 /*!
  * Exit from current coroutine.
  */
 void
-async_reactor_coro_exit(
-    async_reactor_t *reactor
+cu_reactor_coro_exit(
+    cu_reactor_t *reactor
 );
 
 
