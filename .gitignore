@@ -1,3 +1,4 @@
 *.o
 main
 pthread_test*
+.*
