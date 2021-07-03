@@ -7,6 +7,7 @@
 #include <glib.h>
 
 #include "coroutine.h"
+#include "errors.h"
 #include "reactor.h"
 
 struct async_event;
@@ -28,7 +29,7 @@ typedef struct async_event {
     int32_t id;
 } cu_async_event_t;
 
-void 
+cu_err_t
 cu_async_event_init(
     cu_async_event_t *event,
     cu_async_event_poller_t poller,

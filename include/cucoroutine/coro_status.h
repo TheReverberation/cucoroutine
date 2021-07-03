@@ -10,7 +10,7 @@ typedef enum coro_status {
 } cu_coro_status_t;
 
 void 
-_coro_status_name_init();
+coro_status_name_init__();
 
 char const *
 coro_status_name(cu_coro_status_t status);

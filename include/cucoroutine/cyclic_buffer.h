@@ -15,37 +15,37 @@ typedef struct {
 
 cu_err_t
 cu_cyclic_buffer_init(
-        cu_cyclic_buffer_t *buffer,
-        uint32_t cap
+    cu_cyclic_buffer_t *buffer,
+    int32_t cap
 );
 
 
 void 
 cu_cyclic_buffer_destroy(
-        cu_cyclic_buffer_t *buffer
+    cu_cyclic_buffer_t *buffer
 );
 
 
 void 
 cu_cyclic_buffer_push(
-        cu_cyclic_buffer_t *buffer,
-        void *value
+    cu_cyclic_buffer_t *buffer,
+    void *value
 );
 
 void *
 cu_cyclic_buffer_pop(
-        cu_cyclic_buffer_t *buffer
+    cu_cyclic_buffer_t *buffer
 );
 
 bool 
-cu_cyclic_buffer_is_empty(
-        cu_cyclic_buffer_t *buffer
+cu_cyclic_buffer_empty(
+    cu_cyclic_buffer_t *buffer
 );
 
 
 bool
-cu_cyclic_buffer_is_full(
-        cu_cyclic_buffer_t *buffer
+cu_cyclic_buffer_full(
+    cu_cyclic_buffer_t *buffer
 );
 
 

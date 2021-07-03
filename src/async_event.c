@@ -3,21 +3,27 @@
 
 static int32_t id = 0;
 
-void 
+cu_err_t
 cu_async_event_init(
     cu_async_event_t *event,
     cu_async_event_poller_t poller,
     cu_reactor_t *reactor
 ) {
+#ifdef CU_DEBUG
+    g_assert(event);
+    g_assert(poller);
+    g_assert(reactor);
+#endif
     event->reactor = reactor;
     event->status = EVENT_NOT_STARTED;
     event->poller = poller;
     event->id = ++id;
     event->listeners = g_array_new(FALSE, FALSE, sizeof(cu_coroutine_t *));
+    return CU_EOK;
 }
 
 void 
-cu_async_event_add_listener(
+    cu_async_event_add_listener(
     cu_async_event_t *event,
     cu_coroutine_t *coro
 ) {
@@ -52,7 +58,7 @@ poll_coro(void *_args) {
     cu_async_event_t *event = _args;
     event->poller(event, event->poller_args);
     event->status = EVENT_FINISHED;
-    cu_reactor_coro_exit(event->reactor);
+    cu_coro_exit(event->reactor);
 }
 
 void 

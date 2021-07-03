@@ -19,7 +19,7 @@ pid_compare(
 }
 
 void
-_cu_threads_init() {
+cu_threads_init__() {
     thread_metadata = g_tree_new_full(pid_compare, NULL, free, free);
 }
 
@@ -50,6 +50,7 @@ cu_begin_compute(cu_reactor_t *reactor) {
     cu_coroutine_t *coro = cu_reactor_get_current_coro(reactor);
     coro->status = CORO_RUNNUNG_IN_THREAD;
     reactor->caller = coro->id;
+    ++reactor->threads;
     volatile bool to_reactor = true;
     getcontext(&coro->context);
     if (to_reactor) {
@@ -68,7 +69,23 @@ cu_end_compute(cu_reactor_t *reactor) {
         thread_coro->status = CORO_RUNNING;
         pthread_mutex_lock(&reactor->mutex);
         cu_reactor_add_coro(reactor, thread_coro);
+        --reactor->threads;
+        pthread_cond_signal(&reactor->thread_exit);
         pthread_mutex_unlock(&reactor->mutex);
-        pthread_exit(NULL);
+
+        /* Pthreads destroys context running in a thread.
+         * So that coroutine context will not be destroyed, it makes a new context.
+         * */
+        ucontext_t exit_context;
+        exit_context.uc_stack.ss_sp = malloc(1024);
+        exit_context.uc_stack.ss_size = 1024;
+        bool flag = false;
+        getcontext(&exit_context);
+        if (flag) {
+            flag = false;
+            pthread_exit(NULL);
+        }
+        flag = true;
+        setcontext(&exit_context);
     }
 }

@@ -92,7 +92,7 @@ One coroutine execute on the time only. You don't have to worry about the syncin
 
 ```c
 typedef struct async_reactor {  
-    GArray *maked_coros; // coroutine_t * array
+    GArray *made_coros; // coroutine_t * array
     coroutine_t *current_coro;
     int caller;
     ucontext_t context;

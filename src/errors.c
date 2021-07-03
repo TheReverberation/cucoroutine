@@ -1,15 +1,23 @@
+#include <threads.h>
+
 #include "errors.h"
 
-int32_t aio_errno = AE_OK;
+thread_local cu_err_t cu_errno = CU_EOK;
 
-void aio_seterrno(int32_t err) {
-    aio_errno = err;
+void cu_seterr(cu_err_t err) {
+    cu_errno = err;
 }
 
-void aio_ok() {
-    aio_errno = AE_OK;
+cu_err_t cu_geterr() {
+    return cu_errno;
 }
 
-void aio_fail() {
-    aio_errno = AE_FAIL;
+void cu_reseterr() {
+    cu_errno = CU_EOK;
+}
+
+cu_err_t cu_geterr_and_reset() {
+    cu_err_t err = cu_errno;
+    cu_errno = CU_EOK;
+    return err;
 }

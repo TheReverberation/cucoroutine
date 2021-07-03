@@ -14,6 +14,7 @@ typedef void (*cu_func_t)(void *);
 typedef struct cu_coroutine {
     cu_func_t func;
     void *args;
+    cu_reactor_t *reactor;
     enum coro_status status;
     ucontext_t context;
     void *stack;
@@ -36,15 +37,15 @@ cu_coro_init(
 );
 
 void
-_coro_goto_begin(
-    cu_coroutine_t *coro,
-    cu_reactor_t *reactor
-);
+cu_coro_destroy(cu_coroutine_t *coro);
 
-void 
-_back_to_coro(
+void
+coro_goto_begin__(
     cu_coroutine_t *coro
 );
 
 void 
-cu_coro_destroy(cu_coroutine_t *coro);
+back_to_coro__(
+    cu_coroutine_t *coro
+);
+

@@ -8,7 +8,7 @@ notify_writers(
     void *_chan
 ) {
     cu_async_chan_t *chan = _chan;
-    if (!cu_cyclic_buffer_is_empty(&chan->writers) && !cu_cyclic_buffer_is_full(&chan->writers)) {
+    if (!cu_cyclic_buffer_empty(&chan->writers) && !cu_cyclic_buffer_full(&chan->writers)) {
         cu_reactor_add_coro(chan->reactor, (cu_coroutine_t *) cu_cyclic_buffer_pop(&chan->writers));
     }
     chan->notify_writers_ran = false;
@@ -23,25 +23,29 @@ cu_async_chan_open(
 ) {
     cu_async_chan_t *chan = malloc(sizeof(cu_async_chan_t));
     if (!chan) {
-        return NULL;
+        goto CHAN_CLEANUP;
     }
     if (!cu_cyclic_buffer_init(&chan->buffer, cap)) {
-        free(chan);
-        return NULL;
+        goto BUFFER_CLEANUP;
     }
     if (!cu_cyclic_buffer_init(&chan->writers, CU_ASYNC_CHAN_MAX_WRITERS)) {
-        cu_cyclic_buffer_destroy(&chan->buffer);
-        free(chan);
-        return NULL;
+        goto WRITERS_CLEANUP;
     }
     
     chan->notify_writers = cu_make(notify_writers, chan, reactor);
+
     chan->reader = NULL;
     chan->id = ++id;
-    
     chan->reactor = reactor;
     chan->notify_writers_ran = false;
     return chan;
+
+WRITERS_CLEANUP:
+    cu_cyclic_buffer_destroy(&chan->buffer);
+BUFFER_CLEANUP:
+    free(chan);
+CHAN_CLEANUP:
+    return NULL;
 }
 
 cu_err_t
@@ -50,7 +54,7 @@ cu_async_chan_send(
     void *data
 ) {
     cu_coroutine_t *coro = cu_reactor_get_current_coro(chan->reactor);
-    if (cu_cyclic_buffer_is_full(&chan->buffer)) {
+    if (cu_cyclic_buffer_full(&chan->buffer)) {
         cu_cyclic_buffer_push(&chan->writers, coro);
         chan->reactor->caller = coro->id;
         getcontext(&coro->context);
@@ -58,7 +62,7 @@ cu_async_chan_send(
             setcontext(&chan->reactor->context);
         }
     }
-    g_assert(!cu_cyclic_buffer_is_full(&chan->buffer));
+    g_assert(!cu_cyclic_buffer_full(&chan->buffer));
     cu_cyclic_buffer_push(&chan->buffer, data);
     // nofity reader
     if (chan->reader) {
@@ -89,7 +93,7 @@ cu_async_chan_read(
 
     if (!chan->notify_writers_ran) {
         chan->notify_writers_ran = true;
-        _coro_goto_begin(chan->notify_writers, chan->reactor);
+        coro_goto_begin__(chan->notify_writers);
         cu_reactor_add_coro(chan->reactor, chan->notify_writers);
     }
     return data;

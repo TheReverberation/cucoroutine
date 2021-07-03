@@ -17,15 +17,17 @@
 
 /*!
  * Implements switching between coroutines according to time.
- * Automatically frees memory of coroutines maked with cu_reactor_make_coro().
+ * Automatically frees memory of coroutines made with cu_reactor_make_coro().
  */
 typedef struct cu_reactor {  
-    GArray *maked_coros; // cu_coroutine_t * array
+    GArray *made_coros; // cu_coroutine_t * array
     cu_coroutine_t *current_coro;
     int caller;
     ucontext_t context;
     GTree *schedule; // tree of pair<guint64[2] = {runtime, coro.id}, cu_coroutine_t>
     pthread_mutex_t mutex;
+    pthread_cond_t thread_exit;
+    int16_t threads;
 } cu_reactor_t;
 
 /*!
@@ -66,7 +68,7 @@ cu_reactor_add_coro(
 void
 cu_reactor_yield_at_time(
     cu_reactor_t *reactor,
-    guint64 run_after_u
+    int64_t run_after_u
 );
 
 
@@ -95,7 +97,7 @@ cu_reactor_get_current_coro(
  * Exit from current coroutine.
  */
 void
-cu_reactor_coro_exit(
+cu_coro_exit(
     cu_reactor_t *reactor
 );
 
