@@ -3,7 +3,7 @@
 #include <sys/types.h>
 
 #include <glib.h>
-
+#include <stdio.h>
 #include "async_threads.h"
 
 
@@ -59,11 +59,14 @@ cu_begin_compute(cu_reactor_t *reactor) {
         pthread_create(&thr, NULL, compute, coro);
         setcontext(&reactor->context);
     }
+    printf("END BEGIN COMPUTE\n");
 }
+
 
 void 
 cu_end_compute(cu_reactor_t *reactor) {
     cu_coroutine_t *thread_coro = getmeta(pthread_self());
+    printf("end compute\n");
     getcontext(&thread_coro->context);
     if (thread_coro->status == CORO_RUNNUNG_IN_THREAD) {
         thread_coro->status = CORO_RUNNING;
@@ -72,20 +75,8 @@ cu_end_compute(cu_reactor_t *reactor) {
         --reactor->threads;
         pthread_cond_signal(&reactor->thread_exit);
         pthread_mutex_unlock(&reactor->mutex);
-
-        /* Pthreads destroys context running in a thread.
-         * So that coroutine context will not be destroyed, it makes a new context.
-         * */
-        ucontext_t exit_context;
-        exit_context.uc_stack.ss_sp = malloc(1024);
-        exit_context.uc_stack.ss_size = 1024;
-        bool flag = false;
-        getcontext(&exit_context);
-        if (flag) {
-            flag = false;
-            pthread_exit(NULL);
-        }
-        flag = true;
-        setcontext(&exit_context);
+        printf("THREAD EXIT\n");
+        pthread_exit(NULL);
     }
+    printf("END COMPUTE\n");
 }

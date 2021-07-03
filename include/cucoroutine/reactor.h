@@ -6,6 +6,8 @@
 #include <ucontext.h>
 #include <pthread.h>
 
+#include <sys/epoll.h>
+
 #include <glib.h>
 
 #include "coroutine.h"
@@ -14,13 +16,12 @@
 /// Cast milliseconds to nanoseconds
 #define MS * 1000
 
-
 /*!
  * Implements switching between coroutines according to time.
  * Automatically frees memory of coroutines made with cu_reactor_make_coro().
  */
 typedef struct cu_reactor {  
-    GArray *made_coros; // cu_coroutine_t * array
+    GArray *coroutines; // cu_coroutine_t * array
     cu_coroutine_t *current_coro;
     int caller;
     ucontext_t context;
@@ -28,6 +29,9 @@ typedef struct cu_reactor {
     pthread_mutex_t mutex;
     pthread_cond_t thread_exit;
     int16_t threads;
+    GTree *fd_dict; // tree of pair<int fd, GArray<cu_coroutine_t>>
+    GArray *files;
+    int epollfd;
 } cu_reactor_t;
 
 /*!

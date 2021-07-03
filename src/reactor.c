@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 
 #include "reactor.h"
 
@@ -24,6 +25,23 @@ run_time_cmp(
     }
 }
 
+static gint
+int_compare(
+        gconstpointer a_,
+        gconstpointer b_,
+        gpointer data_
+) {
+    int a = *(int *)a_, b = *(int *)b_;
+    return a - b;
+}
+
+static void
+coroutine_array_destroy(gpointer array_) {
+    GArray *array = array_;
+    g_array_free(array, TRUE);
+}
+
+#define CU_MAX_FILES 1024
 
 cu_err_t 
 cu_reactor_init(
@@ -35,23 +53,35 @@ cu_reactor_init(
     reactor->caller = -1;
     reactor->current_coro = NULL;
     reactor->threads = 0;
-    reactor->made_coros = g_array_new(FALSE, FALSE, sizeof(cu_coroutine_t *));
+    reactor->coroutines = g_array_new(FALSE, FALSE, sizeof(cu_coroutine_t *));
+    reactor->files = g_array_new(FALSE, FALSE, sizeof(struct epoll_event *));
+    g_array_set_clear_func(reactor->files, free);
     reactor->schedule = g_tree_new_full(run_time_cmp, NULL, free, NULL);
-
+    reactor->fd_dict = g_tree_new_full(int_compare, NULL, free, coroutine_array_destroy);
     int rcode = pthread_mutex_init(&reactor->mutex, NULL);
     if (rcode != 0) {
-        g_array_free(reactor->made_coros, TRUE);
-        g_tree_destroy(reactor->schedule);
-        return CU_EFAIL;
+        goto SCHEDULE_CLEANUP;
     }
     rcode = pthread_cond_init(&reactor->thread_exit, NULL);
     if (rcode != 0) {
-        g_array_free(reactor->made_coros, TRUE);
-        g_tree_destroy(reactor->schedule);
-        pthread_mutex_destroy(&reactor->mutex);
-        return CU_EFAIL;
+        goto MUTEX_CLEANUP;
+    }
+
+    rcode = epoll_create(CU_MAX_FILES);
+    if (rcode == -1) {
+        goto THREAD_EXIT_CLEANUP;
     }
     return CU_EOK;
+THREAD_EXIT_CLEANUP:
+    pthread_cond_destroy(&reactor->thread_exit);
+MUTEX_CLEANUP:
+    pthread_mutex_destroy(&reactor->mutex);
+SCHEDULE_CLEANUP:
+    g_tree_destroy(reactor->fd_dict);
+    g_tree_destroy(reactor->schedule);
+    g_array_free(reactor->files, TRUE);
+    g_array_free(reactor->coroutines, TRUE);
+    return errno;
 }
 
 void
@@ -61,7 +91,7 @@ cu_reactor_make_coro(
     void *args
 ) {
     cu_coroutine_t *coro = cu_make(func, args, reactor);
-    g_array_append_val(reactor->made_coros, coro);
+    g_array_append_val(reactor->coroutines, coro);
     cu_reactor_add_coro(reactor, coro);
 }
 
@@ -163,14 +193,16 @@ cu_reactor_destroy(
 #ifdef CU_DEBUG
     g_assert(reactor);
 #endif
-    for (size_t i = 0; i < reactor->made_coros->len; ++i) {
-        cu_coroutine_t *coro = g_array_index(reactor->made_coros, cu_coroutine_t *, i);
+    for (size_t i = 0; i < reactor->coroutines->len; ++i) {
+        cu_coroutine_t *coro = g_array_index(reactor->coroutines, cu_coroutine_t *, i);
         //printf("coro[id = %d] destroyed\n", coro->id);
         cu_coro_destroy(coro);
         free(coro);
     }
-    g_array_free(reactor->made_coros, TRUE);
+    g_array_free(reactor->coroutines, TRUE);
+    g_tree_destroy(reactor->fd_dict);
     g_tree_destroy(reactor->schedule);
+    g_array_free(reactor->files, TRUE);
 }
 
 cu_err_t 
@@ -182,6 +214,7 @@ cu_reactor_run(
 #endif
 
     while (g_tree_nnodes(reactor->schedule) > 0 || reactor->threads > 0) {
+        printf("reactor thread: %ld\n", pthread_self());
         if (g_tree_nnodes(reactor->schedule) > 0) {
             //g_tree_print_all(reactor->schedule);
             struct schedule_pair first;
@@ -194,11 +227,21 @@ cu_reactor_run(
             guint64 now = g_get_monotonic_time();
             if (now < run_time) {
                 pthread_mutex_unlock(&reactor->mutex);
-                g_usleep(0);
+                g_usleep(10);
                 pthread_mutex_lock(&reactor->mutex);
                 now = g_get_monotonic_time();
                 if (now < run_time) {
-                    g_usleep(run_time - now);
+                    /*
+                    struct epoll_event events[CU_MAX_FILES];
+                    int nfds = epoll_wait(reactor->epollfd, events, CU_MAX_FILES, (run_time - now) / 1000);
+                    for (int i = 0; i < nfds; ++i) {
+                        int fd = events[i].data.fd;
+                        GArray *fd_watchers = g_tree_lookup(reactor->fd_dict, &fd);
+                        g_assert(fd_watchers);
+                        for (int j = 0; j < fd_watchers->len; ++j) {
+                            cu_reactor_add_coro(reactor, g_array_index(fd_watchers, cu_coroutine_t *, j));
+                        }
+                    }*/
                 }
             }
             reactor->current_coro = coro;
@@ -208,6 +251,7 @@ cu_reactor_run(
                 cu_reactor_resume_coro(reactor);
             }
         } else {
+            printf("reactor coro = 0\n");
             pthread_mutex_lock(&reactor->mutex);
             int last_threads = reactor->threads;
             while (reactor->threads == last_threads) {
