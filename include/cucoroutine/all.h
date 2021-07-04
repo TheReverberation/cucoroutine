@@ -14,3 +14,7 @@ extern cu_reactor_t default_reactor;
     cu_reactor_init(&default_reactor); \
     cu_threads_init__(); \
 }
+
+#define cu_destroy() { \
+    cu_threads_destroy__(); \
+}

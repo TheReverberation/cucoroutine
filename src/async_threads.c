@@ -9,18 +9,38 @@
 
 static GTree *thread_metadata;
 
+struct thread_metadata {
+    cu_coroutine_t *coro;
+    ucontext_t exit_context;
+};
+
+static int
+sign(int64_t x) {
+    if (x < 0) {
+        return -1;
+    } else if (x > 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 static gint
 pid_compare(
     gconstpointer _a,
     gconstpointer _b,
     gpointer _data
 ) {
-    return *(pthread_t *)_a - *(pthread_t *)_b;
+    return sign((int64_t)*(pthread_t *)_a - (int64_t)*(pthread_t *)_b);
 }
 
 void
 cu_threads_init__() {
     thread_metadata = g_tree_new_full(pid_compare, NULL, free, free);
+}
+
+void cu_threads_destroy__() {
+    g_tree_destroy(thread_metadata);
 }
 
 static void 
@@ -41,9 +61,20 @@ getmeta(pthread_t thr) {
 static void *
 compute(void *arg) {
     cu_coroutine_t *coro = arg;
-    setmeta(pthread_self(), coro);
-    setcontext(&coro->context);
+    volatile bool to_exit = false;
+
+    struct thread_metadata *meta = malloc(sizeof(struct thread_metadata));
+    meta->coro = coro;
+    getcontext(&meta->exit_context);
+    setmeta(pthread_self(), meta);
+    if (!to_exit) {
+        to_exit = true;
+        setcontext(&coro->context);
+    }
+    return NULL;
 }
+
+
 
 void 
 cu_begin_compute(cu_reactor_t *reactor) {
@@ -59,14 +90,14 @@ cu_begin_compute(cu_reactor_t *reactor) {
         pthread_create(&thr, NULL, compute, coro);
         setcontext(&reactor->context);
     }
-    printf("END BEGIN COMPUTE\n");
 }
 
 
 void 
 cu_end_compute(cu_reactor_t *reactor) {
-    cu_coroutine_t *thread_coro = getmeta(pthread_self());
-    printf("end compute\n");
+    struct thread_metadata *meta = getmeta(pthread_self());
+    cu_coroutine_t *thread_coro = meta->coro;
+
     getcontext(&thread_coro->context);
     if (thread_coro->status == CORO_RUNNUNG_IN_THREAD) {
         thread_coro->status = CORO_RUNNING;
@@ -75,8 +106,6 @@ cu_end_compute(cu_reactor_t *reactor) {
         --reactor->threads;
         pthread_cond_signal(&reactor->thread_exit);
         pthread_mutex_unlock(&reactor->mutex);
-        printf("THREAD EXIT\n");
-        pthread_exit(NULL);
+        setcontext(&meta->exit_context);
     }
-    printf("END COMPUTE\n");
 }

@@ -252,7 +252,6 @@ cu_reactor_run(
             }
         } else {
             printf("reactor coro = 0\n");
-            pthread_mutex_lock(&reactor->mutex);
             int last_threads = reactor->threads;
             while (reactor->threads == last_threads) {
                 pthread_cond_wait(&reactor->thread_exit, &reactor->mutex);
