@@ -32,6 +32,7 @@ typedef struct cu_reactor {
     GTree *fd_dict; // tree of pair<int fd, GArray<cu_coroutine_t>>
     GArray *files;
     int epollfd;
+    size_t files_cnt;
 } cu_reactor_t;
 
 /*!

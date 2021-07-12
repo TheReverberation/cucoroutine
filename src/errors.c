@@ -2,7 +2,7 @@
 
 #include "errors.h"
 
-thread_local cu_err_t cu_errno = CU_EOK;
+cu_err_t cu_errno = CU_EOK;
 
 void cu_seterr(cu_err_t err) {
     cu_errno = err;

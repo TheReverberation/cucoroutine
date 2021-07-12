@@ -33,16 +33,20 @@ cu_make(
     }
     return coro;
 }
+cu_coroutine_t *coros[1024];
+int cpos = 0;
 
 static void
 coro_runner(
-    cu_coroutine_t *coro
+    int coropos
 ) {
+    cu_coroutine_t *coro = coros[coropos];
     coro->func(coro->args);
     cu_coro_exit(coro->reactor);
 }
 
-#define DEFAULT_STACK_SIZE (1L << 16)
+#define DEFAULT_STACK_SIZE (1L << 20)
+
 
 cu_err_t
 cu_coro_init(
@@ -70,7 +74,8 @@ cu_coro_init(
     coro->context.uc_stack.ss_sp = coro->stack;
     coro->context.uc_stack.ss_size = DEFAULT_STACK_SIZE;
     coro->context.uc_link = NULL;
-    makecontext(&(coro->context), (void (*)(void))coro_runner, 1, coro);
+    coros[++cpos] = coro;
+    makecontext(&(coro->context), (void (*)(void))coro_runner, 1, cpos);
     return CU_EOK;
 }
 
