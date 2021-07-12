@@ -62,7 +62,8 @@ int main() {
     return 0;
 }
 ```
-
+## Requirements
+glib-2.0
 ## How it works
 ### Coroutine type
 **Coroutine** is a function can save its condition(called __context__) and return to it after some time. A coroutine must have its own stack, save registers and signals, "*ucontext.h*" library uses for it. 
