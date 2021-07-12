@@ -2,9 +2,9 @@
 
 #include <glib.h>
 
-#include "async_event.h"
+
 #include "reactor.h"
-#include "cyclic_buffer.h"
+#include "../../src/cyclic_buffer.h"
 #include "errors.h"
 
 

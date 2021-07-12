@@ -1,4 +1,4 @@
-*.o
+*.[oa]
 main
 pthread_test*
 .*
