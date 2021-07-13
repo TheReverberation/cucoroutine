@@ -1,6 +1,6 @@
 #include <glib.h>
 
-#include "async_channel.h"
+#include "channel.h"
 
 
 static void
