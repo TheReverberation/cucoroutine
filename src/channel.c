@@ -1,27 +1,43 @@
 #include <glib.h>
 
+#include "coroutine_private.h"
 #include "channel.h"
+#include "util/cyclic_buffer.h"
+#include "errors.h"
+#include "reactor_private.h"
+
+#define CU_ASYNC_CHAN_MAX_WRITERS 1024
+
+struct cu_chan {
+    cu_cyclic_buffer_t buffer;
+    cu_cyclic_buffer_t writers;
+    bool notify_writers_ran;
+    cu_coroutine_t notify_writers;
+    cu_coroutine_t reader;
+    cu_reactor_t reactor;
+    int32_t id;
+};
 
 
 static void
 notify_writers(
     void *_chan
 ) {
-    cu_async_chan_t *chan = _chan;
+    struct cu_chan *chan = _chan;
     if (!cu_cyclic_buffer_empty(&chan->writers) && !cu_cyclic_buffer_full(&chan->writers)) {
-        cu_reactor_add_coro(chan->reactor, (cu_coroutine_t *) cu_cyclic_buffer_pop(&chan->writers));
+        cu_reactor_add_coro(chan->reactor, (cu_coroutine_t) cu_cyclic_buffer_pop(&chan->writers));
     }
     chan->notify_writers_ran = false;
 }
 
 static int32_t id = 0;
 
-cu_async_chan_t *
+struct cu_chan *
 cu_async_chan_open(
-    cu_reactor_t *reactor, 
-    uint32_t cap
+    uint32_t cap,
+    struct cu_reactor *reactor
 ) {
-    cu_async_chan_t *chan = malloc(sizeof(cu_async_chan_t));
+    struct cu_chan *chan = malloc(sizeof(struct cu_chan));
     if (!chan) {
         goto CHAN_CLEANUP;
     }
@@ -50,10 +66,10 @@ CHAN_CLEANUP:
 
 cu_err_t
 cu_async_chan_send(
-    cu_async_chan_t *chan, 
+    struct cu_chan *chan,
     void *data
 ) {
-    cu_coroutine_t *coro = cu_reactor_get_current_coro(chan->reactor);
+    cu_coroutine_t coro = cu_reactor_get_current_coro(chan->reactor);
     if (cu_cyclic_buffer_full(&chan->buffer)) {
         cu_cyclic_buffer_push(&chan->writers, coro);
         chan->reactor->caller = coro->id;
@@ -75,10 +91,10 @@ cu_async_chan_send(
 
 void *
 cu_async_chan_read(
-    cu_async_chan_t *chan
+    struct cu_chan *chan
 ) {
     if (chan->buffer.size == 0) {
-        cu_coroutine_t *coro = cu_reactor_get_current_coro(chan->reactor);
+        cu_coroutine_t coro = cu_reactor_get_current_coro(chan->reactor);
         if (chan->reader) {
             g_error("Chan[id = %d] has more that one readers\n", chan->id);
         }
@@ -101,7 +117,7 @@ cu_async_chan_read(
 
 void 
 cu_async_chan_close(
-    cu_async_chan_t *chan
+    struct cu_chan *chan
 ) {
     if (chan) {
         if (chan->writers.size > 0) {

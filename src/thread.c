@@ -1,11 +1,23 @@
-#include "thread.h"
+#include <pthread.h>
 
 #include <glib.h>
+
+#include "coroutine_private.h"
+#include "thread.h"
+#include "errors.h"
+#include "reactor.h"
+#include "reactor_private.h"
+
+typedef struct cu_thread {
+    void (*func)(void *);
+    void *arg;
+    cu_coroutine_t coro;
+} *cu_thread_t;
 
 
 static void *
 run(void *thread_) {
-    cu_thread_t *thread = thread_;
+    cu_thread_t thread = *(cu_thread_t *)thread_;
     thread->func(thread->arg);
     if (thread->coro != NULL) {
         pthread_mutex_lock(&thread->coro->reactor->mutex);
@@ -18,14 +30,15 @@ run(void *thread_) {
 }
 
 cu_err_t cu_thread_create(cu_thread_t *thr, void (*func)(void *), void *arg) {
-    thr->func = func;
-    thr->arg = arg;
-    thr->coro = NULL;
+    *thr = malloc(sizeof(struct cu_thread));
+    (*thr)->func = func;
+    (*thr)->arg = arg;
+    (*thr)->coro = NULL;
     pthread_t pthr;
     pthread_create(&pthr, NULL, run, thr);
 }
 
-cu_err_t cu_join(cu_thread_t *thr, cu_reactor_t *reactor) {
+cu_err_t cu_join(cu_thread_t thr, cu_reactor_t reactor) {
     ++reactor->threads;
     g_assert(thr->coro == NULL);
     thr->coro = cu_reactor_get_current_coro(reactor);

@@ -10,7 +10,7 @@ PKG_CHECK_MODULES(GLIB REQUIRED glib-2.0)
 FILE(GLOB SOURCES src/*.c src/*.h)
 FILE(GLOB HEADERS include/cucoroutine/*.h)
 
-add_library(cucoroutine STATIC ${SOURCES} ${HEADERS})
+add_library(cucoroutine STATIC ${SOURCES} ${HEADERS} src/coroutine_private.h src/reactor_private.h)
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "debug")
     target_compile_definitions(cucoroutine PRIVATE -DCU_DEBUG)

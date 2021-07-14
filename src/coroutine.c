@@ -3,22 +3,39 @@
 #include <glib.h>
 
 #include <reactor.h>
-#include <coroutine.h>
+
+#include "coroutine_private.h"
+
+static char const *coro_status_names[CORO_STATUS_END];
+
+void coro_status_name_init__() {
+    coro_status_names[CORO_NOT_EXEC] = "not exec";
+    coro_status_names[CORO_RUNNING] = "running";
+    coro_status_names[CORO_DONE] = "done";
+}
+
+
+char const *
+coro_status_name(enum coro_status status) {
+    return coro_status_names[status];
+}
+
+
 
 static int32_t id = 0;
 
 
-cu_coroutine_t *
+cu_coroutine_t
 cu_make(
     cu_func_t func,
     void *args,
-    cu_reactor_t *reactor
+    struct cu_reactor *reactor
 ) {
 #ifdef CU_DEBUG
     g_assert(func);
     g_assert(reactor);
 #endif
-    cu_coroutine_t *coro = malloc(sizeof(cu_coroutine_t));
+    struct cu_coroutine *coro = malloc(sizeof(struct cu_coroutine));
 #ifdef CU_DEBUG
     g_assert(coro);
 #endif
@@ -33,14 +50,15 @@ cu_make(
     }
     return coro;
 }
-cu_coroutine_t *coros[1024];
+
+struct cu_coroutine *coros[1024];
 int cpos = 0;
 
 static void
 coro_runner(
     int coropos
 ) {
-    cu_coroutine_t *coro = coros[coropos];
+    struct cu_coroutine *coro = coros[coropos];
     coro->func(coro->args);
     cu_coro_exit(coro->reactor);
 }
@@ -50,10 +68,10 @@ coro_runner(
 
 cu_err_t
 cu_coro_init(
-    cu_coroutine_t *coro,
+    struct cu_coroutine *coro,
     cu_func_t func,
     void *args,
-    cu_reactor_t *reactor
+    struct cu_reactor *reactor
 ) {
 #ifdef CU_DEBUG
     g_assert(coro);
@@ -75,13 +93,14 @@ cu_coro_init(
     coro->context.uc_stack.ss_size = DEFAULT_STACK_SIZE;
     coro->context.uc_link = NULL;
     coros[++cpos] = coro;
+    // makecontext accept a 32bit arguments, see man makecontext
     makecontext(&(coro->context), (void (*)(void))coro_runner, 1, cpos);
     return CU_EOK;
 }
 
 void
 coro_goto_begin__(
-    cu_coroutine_t *coro
+    struct cu_coroutine *coro
 ) {
     getcontext(&(coro->context));
     coro->context.uc_stack.ss_sp = coro->stack;
@@ -92,14 +111,14 @@ coro_goto_begin__(
 
 void 
 back_to_coro__(
-    cu_coroutine_t *coro
+    struct cu_coroutine *coro
 ) {
     setcontext(&(coro->context));
 }
 
 void
 cu_coro_destroy(
-    cu_coroutine_t *coro
+    struct cu_coroutine *coro
 ) {
 #ifdef CU_DEBUG
     if (coro->status != CORO_DONE) {

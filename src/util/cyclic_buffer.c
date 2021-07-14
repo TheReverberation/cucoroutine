@@ -9,7 +9,7 @@
 cu_err_t
 cu_cyclic_buffer_init(
     cu_cyclic_buffer_t *buffer,
-    int32_t cap
+    uint32_t cap
 ) {
 #ifdef CU_DEBUG
     g_assert(buffer);

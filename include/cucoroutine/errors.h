@@ -8,9 +8,9 @@
 
 typedef int32_t cu_err_t;
 
-typedef enum {
+enum {
     CU_EOK = 0,
-    __CU_MASK__ = 0x100,
+    CU_MASK__ = 0x100,
     CU_EFAIL,
 };
 

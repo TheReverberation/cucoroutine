@@ -10,13 +10,13 @@ typedef struct {
     uint32_t cap;
     uint32_t end;
     uint32_t begin;
-    int32_t size;
+    uint32_t size;
 } cu_cyclic_buffer_t;
 
 cu_err_t
 cu_cyclic_buffer_init(
     cu_cyclic_buffer_t *buffer,
-    int32_t cap
+    uint32_t cap
 );
 
 

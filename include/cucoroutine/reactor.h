@@ -20,20 +20,7 @@
  * Implements switching between coroutines according to time.
  * Automatically frees memory of coroutines made with cu_reactor_make_coro().
  */
-typedef struct cu_reactor {  
-    GArray *coroutines; // cu_coroutine_t * array
-    cu_coroutine_t *current_coro;
-    int caller;
-    ucontext_t context;
-    GTree *schedule; // tree of pair<guint64[2] = {runtime, coro.id}, cu_coroutine_t>
-    pthread_mutex_t mutex;
-    pthread_cond_t thread_exit;
-    int16_t threads;
-    GTree *fd_dict; // tree of pair<int fd, GArray<cu_coroutine_t>>
-    GArray *files;
-    int epollfd;
-    size_t files_cnt;
-} cu_reactor_t;
+typedef struct cu_reactor *cu_reactor_t;
 
 /*!
  * Initialize reactor.
@@ -51,7 +38,7 @@ cu_reactor_init(
  */
 void
 cu_reactor_make_coro(
-    cu_reactor_t *reactor,
+    cu_reactor_t reactor,
     cu_func_t func,
     void *args
 );
@@ -63,8 +50,8 @@ cu_reactor_make_coro(
  */
 void
 cu_reactor_add_coro(
-    cu_reactor_t *reactor,
-    cu_coroutine_t *coro
+    cu_reactor_t reactor,
+    cu_coroutine_t coro
 );
 
 /*!
@@ -72,14 +59,14 @@ cu_reactor_add_coro(
  */
 void
 cu_reactor_yield_at_time(
-    cu_reactor_t *reactor,
+    cu_reactor_t reactor,
     int64_t run_after_u
 );
 
 
 void 
 cu_reactor_resume_coro(
-    cu_reactor_t *reactor
+    cu_reactor_t reactor
 );
 
 /*!
@@ -90,12 +77,12 @@ cu_reactor_resume_coro(
  */
 cu_err_t 
 cu_reactor_run(
-    cu_reactor_t *reactor
+    cu_reactor_t reactor
 );
 
-cu_coroutine_t *
+cu_coroutine_t
 cu_reactor_get_current_coro(
-    cu_reactor_t *reactor
+    cu_reactor_t reactor
 );
 
 /*!
@@ -103,7 +90,7 @@ cu_reactor_get_current_coro(
  */
 void
 cu_coro_exit(
-    cu_reactor_t *reactor
+    cu_reactor_t reactor
 );
 
 

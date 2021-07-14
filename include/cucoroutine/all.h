@@ -5,6 +5,7 @@
 #include "thread.h"
 #include "coroutine.h"
 #include "reactor.h"
+#include "io.h"
 
 extern cu_reactor_t default_reactor;
 
