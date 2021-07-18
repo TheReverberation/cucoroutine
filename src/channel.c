@@ -69,7 +69,7 @@ cu_async_chan_send(
     struct cu_chan *chan,
     void *data
 ) {
-    cu_coroutine_t coro = cu_reactor_get_current_coro(chan->reactor);
+    cu_coroutine_t coro = cu_self(chan->reactor);
     if (cu_cyclic_buffer_full(&chan->buffer)) {
         cu_cyclic_buffer_push(&chan->writers, coro);
         chan->reactor->caller = coro->id;
@@ -94,7 +94,7 @@ cu_async_chan_read(
     struct cu_chan *chan
 ) {
     if (chan->buffer.size == 0) {
-        cu_coroutine_t coro = cu_reactor_get_current_coro(chan->reactor);
+        cu_coroutine_t coro = cu_self(chan->reactor);
         if (chan->reader) {
             g_error("Chan[id = %d] has more that one readers\n", chan->id);
         }

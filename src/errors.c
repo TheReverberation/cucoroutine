@@ -3,7 +3,7 @@
 #include "errors.h"
 
 cu_err_t cu_errno = CU_EOK;
-
+#include <stdlib.h>
 void cu_seterr(cu_err_t err) {
     cu_errno = err;
 }

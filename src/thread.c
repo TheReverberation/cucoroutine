@@ -41,7 +41,7 @@ cu_err_t cu_thread_create(cu_thread_t *thr, void (*func)(void *), void *arg) {
 cu_err_t cu_join(cu_thread_t thr, cu_reactor_t reactor) {
     ++reactor->threads;
     g_assert(thr->coro == NULL);
-    thr->coro = cu_reactor_get_current_coro(reactor);
+    thr->coro = cu_self(reactor);
     reactor->caller = thr->coro->id;
     getcontext(&thr->coro->context);
     if (reactor->caller == thr->coro->id) {

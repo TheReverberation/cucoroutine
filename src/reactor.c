@@ -115,7 +115,7 @@ cu_reactor_add_coro(
 }
 
 cu_coroutine_t
-cu_reactor_get_current_coro(
+cu_self(
     struct cu_reactor *reactor
 ) {
 #ifdef CU_DEBUG
@@ -132,7 +132,7 @@ cu_reactor_resume_coro(
 #ifdef CU_DEBUG
     g_assert(reactor);
 #endif
-    struct cu_coroutine *coro = cu_reactor_get_current_coro(reactor);
+    struct cu_coroutine *coro = cu_self(reactor);
     if (coro->status == CORO_NOT_EXEC) {
         coro->status = CORO_RUNNING;
         back_to_coro__(coro);
@@ -192,6 +192,7 @@ cu_reactor_destroy(
 
 static void
 serve_epoll(struct cu_reactor *reactor, int timeout) {
+    //printf("%s\n", __func__);
     struct epoll_event events[CU_MAX_FILES];
 
     int nfds = epoll_wait(reactor->epollfd, events, CU_MAX_FILES, timeout);
@@ -202,11 +203,13 @@ serve_epoll(struct cu_reactor *reactor, int timeout) {
         for (int j = 0; j < fd_watchers->len; ++j) {
             cu_reactor_add_coro(reactor, g_array_index(fd_watchers, cu_coroutine_t, j));
         }
+        g_array_set_size(fd_watchers, 0);
     }
 }
 
 static void
 serve_schedule(struct cu_reactor *reactor) {
+    //printf("%s\n", __func__);
     struct schedule_pair first;
     g_tree_first(reactor->schedule, &first);
 
@@ -266,15 +269,15 @@ cu_reactor_run(
 }
 
 
-void cu_reactor_yield_at_time(
-    struct cu_reactor *reactor,
-    int64_t run_after_u
+void cu_yield_at_time(
+    int64_t run_after_u,
+    struct cu_reactor *reactor
 ) {
 #ifdef CU_DEBUG
     g_assert(reactor);
     g_assert(run_after_u >= 0);
 #endif
-    struct cu_coroutine *coro = cu_reactor_get_current_coro(reactor);
+    struct cu_coroutine *coro = cu_self(reactor);
     guint64 *run_time = malloc(2 * sizeof(uint64_t));
     run_time[0] = g_get_monotonic_time() + run_after_u;
     run_time[1] = coro->id;
@@ -288,13 +291,13 @@ void cu_reactor_yield_at_time(
 
 
 void
-cu_coro_exit(
+cu_exit(
     struct cu_reactor *reactor
 ) {
 #ifdef CU_DEBUG
     g_assert(reactor);
 #endif
-    struct cu_coroutine *coro = cu_reactor_get_current_coro(reactor);
+    struct cu_coroutine *coro = cu_self(reactor);
     coro->status = CORO_DONE;
     reactor->caller = coro->id;
     setcontext(&(reactor->context));

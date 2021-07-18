@@ -14,3 +14,8 @@ typedef struct cu_reactor {
     int epollfd;
     size_t files_cnt;
 } *cu_reactor_t;
+
+void
+cu_reactor_resume_coro(
+    cu_reactor_t reactor
+);

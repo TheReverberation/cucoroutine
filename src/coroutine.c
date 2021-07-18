@@ -60,7 +60,7 @@ coro_runner(
 ) {
     struct cu_coroutine *coro = coros[coropos];
     coro->func(coro->args);
-    cu_coro_exit(coro->reactor);
+    cu_exit(coro->reactor);
 }
 
 #define DEFAULT_STACK_SIZE (1L << 20)
