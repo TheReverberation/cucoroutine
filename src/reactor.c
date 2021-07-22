@@ -89,18 +89,18 @@ SCHEDULE_CLEANUP:
 }
 
 void
-cu_reactor_make_coro(
+cu_reactor_create_coro(
     struct cu_reactor *reactor,
     cu_func_t func,
     void *args
 ) {
-    cu_coroutine_t coro = cu_make(func, args, reactor);
+    cu_coroutine_t coro = cu_create(func, args, reactor);
     g_array_append_val(reactor->coroutines, coro);
-    cu_reactor_add_coro(reactor, coro);
+    cu_reactor_add(reactor, coro);
 }
 
 void
-cu_reactor_add_coro(
+cu_reactor_add(
     struct cu_reactor *reactor,
     cu_coroutine_t coro
 ) {
@@ -201,7 +201,7 @@ serve_epoll(struct cu_reactor *reactor, int timeout) {
         GArray *fd_watchers = g_tree_lookup(reactor->fd_dict, &fd);
         g_assert(fd_watchers);
         for (int j = 0; j < fd_watchers->len; ++j) {
-            cu_reactor_add_coro(reactor, g_array_index(fd_watchers, cu_coroutine_t, j));
+            cu_reactor_add(reactor, g_array_index(fd_watchers, cu_coroutine_t, j));
         }
         g_array_set_size(fd_watchers, 0);
     }

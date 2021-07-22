@@ -1,5 +1,6 @@
-/*! @file errors.h
- * Error handling.
+/*!
+ * \file
+ * \brief error handling.
  */
 #pragma once
 

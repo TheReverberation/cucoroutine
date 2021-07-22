@@ -1,10 +1,18 @@
 #include <errno.h>
 
+#include <fcntl.h>
+
 #include "coroutine_private.h"
 #include "io.h"
 #include "reactor_private.h"
 
+static void setnoblocking(int fd) {
+    int flags = fcntl(fd, F_GETFL);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+
 int cu_add_fd(int fd, uint32_t opts, struct cu_reactor *reactor) {
+    setnoblocking(fd);
     GArray *watchers = g_tree_lookup(reactor->fd_dict, &fd);
     if (watchers == NULL) {
         int *fdptr = malloc(sizeof(int));
@@ -82,6 +90,7 @@ int cu_close(int fd, struct cu_reactor *reactor) {
 }
 
 int cu_accept(int fd, struct sockaddr *addr, socklen_t *socklen, cu_reactor_t reactor) {
+    setnoblocking(fd);
     GArray *watchers = g_tree_lookup(reactor->fd_dict, &fd);
     if (watchers == NULL) {
         cu_seterr(EINVAL);

@@ -39,14 +39,12 @@ void server(void *arg) {
         struct sockaddr_in client_addr;
         uint32_t socket_len;
         int client_fd = cu_accept(ss, (struct sockaddr *)&client_addr, &socket_len, default_reactor);
-        int flags = fcntl(client_fd, F_GETFL);
-        fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
         printf("accepted\n");
         struct serve_args *args = malloc(sizeof(struct serve_args));
         args->socket_len = socket_len;
         args->addr = client_addr;
         args->fd = client_fd;
-        cu_reactor_make_coro(default_reactor, serve, args);
+        cu_reactor_create_coro(default_reactor, serve, args);
     }
 }
 
@@ -61,7 +59,7 @@ int main() {
     listen(ss, 100);
 
     cu_reactor_init(&default_reactor);
-    cu_reactor_make_coro(default_reactor, server, (void *)ss);
+    cu_reactor_create_coro(default_reactor, server, (void *) ss);
     cu_reactor_run(default_reactor);
     return 0;
 }

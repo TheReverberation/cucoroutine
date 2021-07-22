@@ -26,7 +26,7 @@ static int32_t id = 0;
 
 
 cu_coroutine_t
-cu_make(
+cu_create(
     cu_func_t func,
     void *args,
     struct cu_reactor *reactor
@@ -93,7 +93,7 @@ cu_coro_init(
     coro->context.uc_stack.ss_size = DEFAULT_STACK_SIZE;
     coro->context.uc_link = NULL;
     coros[++cpos] = coro;
-    // makecontext accept a 32bit arguments, see man makecontext
+    // makecontext accept a 32bit arguments, see 'man makecontext'
     makecontext(&(coro->context), (void (*)(void))coro_runner, 1, cpos);
     return CU_EOK;
 }

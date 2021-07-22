@@ -13,8 +13,7 @@ enum coro_status {
 };
 
 
-void
-coro_status_name_init__();
+
 
 char const *
 coro_status_name(enum coro_status status);
@@ -29,6 +28,13 @@ typedef struct cu_coroutine {
     int32_t id;
 } *cu_coroutine_t;
 
+cu_err_t
+cu_coro_init(
+    struct cu_coroutine *coro,
+    cu_func_t func,
+    void *args,
+    cu_reactor_t reactor
+);
 
 void
 coro_goto_begin__(

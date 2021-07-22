@@ -21,7 +21,7 @@ run(void *thread_) {
     thread->func(thread->arg);
     if (thread->coro != NULL) {
         pthread_mutex_lock(&thread->coro->reactor->mutex);
-        cu_reactor_add_coro(thread->coro->reactor, thread->coro);
+        cu_reactor_add(thread->coro->reactor, thread->coro);
         --thread->coro->reactor->threads;
         pthread_cond_signal(&thread->coro->reactor->thread_exit);
         pthread_mutex_unlock(&thread->coro->reactor->mutex);
@@ -35,10 +35,10 @@ cu_err_t cu_thread_create(cu_thread_t *thr, void (*func)(void *), void *arg) {
     (*thr)->arg = arg;
     (*thr)->coro = NULL;
     pthread_t pthr;
-    pthread_create(&pthr, NULL, run, thr);
+    return pthread_create(&pthr, NULL, run, thr);
 }
 
-cu_err_t cu_join(cu_thread_t thr, cu_reactor_t reactor) {
+void cu_join(cu_thread_t thr, cu_reactor_t reactor) {
     ++reactor->threads;
     g_assert(thr->coro == NULL);
     thr->coro = cu_self(reactor);

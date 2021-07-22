@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief reactor operations
+ */
+
 #pragma once
 
 #include <stdint.h>
@@ -18,7 +23,7 @@
 
 /*!
  * Implements switching between coroutines according to time.
- * Automatically frees memory of coroutines made with cu_reactor_make_coro().
+ * Automatically frees memory of coroutines made with #cu_reactor_create_coro().
  */
 typedef struct cu_reactor *cu_reactor_t;
 
@@ -34,21 +39,26 @@ cu_reactor_init(
 );
 
 /*!
- * Create a new coroutine and add one to array for the next freeing.
- * See #cu_coro_make(), #cu_reactor_run().
+ * Create a new coroutine and add one to array for automatically freeing.
+ * Composition of #cu_reactor_add_coro and #cu_create.
+ * See #cu_create, #cu_reactor_run().
+ * \param reactor
+ * \param func - start function, see #cu_func_t
+ * \param args - is passed to start function as the sole argument
  */
 void
-cu_reactor_make_coro(
+cu_reactor_create_coro(
     cu_reactor_t reactor,
     cu_func_t func,
     void *args
 );
 
 /*!
- * Add a coroutine to schedule.
+ * Add a coroutine to reactor.
+ * Reactor runs coroutine from stopped place or begin it if it have not started yet.
  */
 void
-cu_reactor_add_coro(
+cu_reactor_add(
     cu_reactor_t reactor,
     cu_coroutine_t coro
 );
@@ -66,7 +76,8 @@ cu_yield_at_time(
 
 /*!
  * Runs coroutines alternatively by schedule, io events, thread events.
- * \return 0.
+ * Destroys itself after.
+ * \return The function always succeeds, returning 0.
  * \todo other errors
  */
 cu_err_t 
@@ -75,9 +86,9 @@ cu_reactor_run(
 );
 
 /*!
- *
+ * Returns pointer of the calling coroutine.
  * \param reactor
- * \return current running coroutine
+ * \return The function always succeeds, returning current running coroutine.
  */
 cu_coroutine_t
 cu_self(
@@ -86,6 +97,7 @@ cu_self(
 
 /*!
  * Exit from current coroutine.
+ * The coroutine resources are not released.
  */
 void
 cu_exit(
