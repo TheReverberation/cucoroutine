@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <pthread.h>
 
 #include <glib.h>
@@ -25,6 +26,8 @@ run(void *thread_) {
         --thread->coro->reactor->threads;
         pthread_cond_signal(&thread->coro->reactor->thread_exit);
         pthread_mutex_unlock(&thread->coro->reactor->mutex);
+    } else {
+        g_assert(false);
     }
     return NULL;
 }

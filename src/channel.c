@@ -1,5 +1,5 @@
 #include <glib.h>
-
+#include <stdio.h>
 #include "coroutine_private.h"
 #include "channel.h"
 #include "util/cyclic_buffer.h"
@@ -11,24 +11,11 @@
 struct cu_chan {
     cu_cyclic_buffer_t buffer;
     cu_cyclic_buffer_t writers;
-    bool notify_writers_ran;
     cu_coroutine_t notify_writers;
     cu_coroutine_t reader;
     cu_reactor_t reactor;
     int32_t id;
 };
-
-
-static void
-notify_writers(
-    void *_chan
-) {
-    struct cu_chan *chan = _chan;
-    if (!cu_cyclic_buffer_empty(&chan->writers) && !cu_cyclic_buffer_full(&chan->writers)) {
-        cu_reactor_add(chan->reactor, (cu_coroutine_t) cu_cyclic_buffer_pop(&chan->writers));
-    }
-    chan->notify_writers_ran = false;
-}
 
 static int32_t id = 0;
 
@@ -41,19 +28,16 @@ cu_async_chan_open(
     if (!chan) {
         goto CHAN_CLEANUP;
     }
-    if (!cu_cyclic_buffer_init(&chan->buffer, cap)) {
+    if (cu_cyclic_buffer_init(&chan->buffer, cap) != 0) {
         goto BUFFER_CLEANUP;
     }
-    if (!cu_cyclic_buffer_init(&chan->writers, CU_ASYNC_CHAN_MAX_WRITERS)) {
+    if (cu_cyclic_buffer_init(&chan->writers, CU_ASYNC_CHAN_MAX_WRITERS) != 0) {
         goto WRITERS_CLEANUP;
     }
     
-    chan->notify_writers = cu_create(notify_writers, chan, reactor);
-
     chan->reader = NULL;
     chan->id = ++id;
     chan->reactor = reactor;
-    chan->notify_writers_ran = false;
     return chan;
 
 WRITERS_CLEANUP:
@@ -65,7 +49,7 @@ CHAN_CLEANUP:
     return NULL;
 }
 
-cu_err_t
+void
 cu_async_chan_write(
     struct cu_chan *chan,
     void *data
@@ -108,10 +92,8 @@ cu_async_chan_read(
     }
     void *data = cu_cyclic_buffer_pop(&chan->buffer);
 
-    if (!chan->notify_writers_ran) {
-        chan->notify_writers_ran = true;
-        coro_goto_begin__(chan->notify_writers);
-        cu_reactor_add(chan->reactor, chan->notify_writers);
+    if (!cu_cyclic_buffer_empty(&chan->writers) && !cu_cyclic_buffer_full(&chan->buffer)) {
+        cu_reactor_add(chan->reactor, (cu_coroutine_t) cu_cyclic_buffer_pop(&chan->writers));
     }
     return data;
 }
@@ -132,8 +114,6 @@ cu_async_chan_close(
         if (chan->reader) {
             g_error("Chan[id = %d] is closed when the reader is waiting", chan->id);
         }
-        cu_coro_destroy(chan->notify_writers);
-        free(chan->notify_writers);
     }
     free(chan);
 }

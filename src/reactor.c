@@ -180,7 +180,6 @@ cu_reactor_destroy(
 #endif
     for (size_t i = 0; i < reactor->coroutines->len; ++i) {
         struct cu_coroutine *coro = g_array_index(reactor->coroutines, cu_coroutine_t, i);
-        //printf("coro[id = %d] destroyed\n", coro->id);
         cu_coro_destroy(coro);
         free(coro);
     }
@@ -192,7 +191,6 @@ cu_reactor_destroy(
 
 static void
 serve_epoll(struct cu_reactor *reactor, int timeout) {
-    //printf("%s\n", __func__);
     struct epoll_event events[CU_MAX_FILES];
 
     int nfds = epoll_wait(reactor->epollfd, events, CU_MAX_FILES, timeout);
@@ -207,9 +205,29 @@ serve_epoll(struct cu_reactor *reactor, int timeout) {
     }
 }
 
+//static gboolean
+// print_node(
+//     gpointer run_time,
+//     gpointer _coro,
+//     gpointer user_data
+// ) {
+//     cu_coroutine_t coro = _coro;
+//     printf("[id = %d]\n", coro->id);
+//     return FALSE;
+// }
+//
+// static void
+// g_tree_print_all(
+//     GTree *tree
+// ) {
+//     printf("schedule\n");
+//     g_tree_foreach(tree, print_node, NULL);
+//     printf("--------\n");
+// }
+
+
 static void
 serve_schedule(struct cu_reactor *reactor) {
-    //printf("%s\n", __func__);
     struct schedule_pair first;
     g_tree_first(reactor->schedule, &first);
 
@@ -236,12 +254,10 @@ serve_schedule(struct cu_reactor *reactor) {
 // wait until someone thread exit
 static void
 serve_threads(struct cu_reactor *reactor) {
-    pthread_mutex_lock(&reactor->mutex);
     int last_threads = reactor->threads;
     while (reactor->threads == last_threads) {
         pthread_cond_wait(&reactor->thread_exit, &reactor->mutex);
     }
-    pthread_mutex_unlock(&reactor->mutex);
 }
 
 cu_err_t 

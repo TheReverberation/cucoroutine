@@ -56,9 +56,8 @@ int cpos = 0;
 
 static void
 coro_runner(
-    int coropos
+    struct cu_coroutine *coro
 ) {
-    struct cu_coroutine *coro = coros[coropos];
     coro->func(coro->args);
     cu_exit(coro->reactor);
 }
@@ -94,7 +93,7 @@ cu_coro_init(
     coro->context.uc_link = NULL;
     coros[++cpos] = coro;
     // makecontext accept a 32bit arguments, see 'man makecontext'
-    makecontext(&(coro->context), (void (*)(void))coro_runner, 1, cpos);
+    makecontext(&(coro->context), (void (*)(void))coro_runner, 2, coro);
     return CU_EOK;
 }
 
@@ -106,7 +105,7 @@ coro_goto_begin__(
     coro->context.uc_stack.ss_sp = coro->stack;
     coro->context.uc_stack.ss_size = DEFAULT_STACK_SIZE;
     coro->context.uc_link = NULL;
-    makecontext(&(coro->context), (void (*)(void))coro_runner, 1, coro);
+    makecontext(&(coro->context), (void (*)(void))coro_runner, 2, coro);
 }
 
 void 

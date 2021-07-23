@@ -1,6 +1,7 @@
 /*!
  * \file
  * \brief data channels
+ *
  * Async data channels with automatic blocking of coroutine during read/write operations.
  */
 
@@ -25,9 +26,8 @@ cu_async_chan_open(uint32_t cap, cu_reactor_t reactor);
 /*!
  * Blocks until queue is full.
  * Pushes *data* pointer to channel queue.
- * @return
  */
-cu_err_t
+void
 cu_async_chan_write(cu_chan_t chan, void *data);
 
 /*!
