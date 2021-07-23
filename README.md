@@ -1,8 +1,6 @@
 # CUcoroutine
 CUcoroutine(C + ucontext + coroutine) is a simply to use **ucontext.h** realisation of coroutine concurrency.
 
-## Sample
-
 ```c 
 
 ```
@@ -15,5 +13,7 @@ All coroutines must be finished.
 ## Requirements
 glib-2.0
 
+## Examples
+See examples directory.
 ## Docs
 See cucoroutine/docs directory.
