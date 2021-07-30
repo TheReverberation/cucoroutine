@@ -1,9 +1,15 @@
 # CUcoroutine
 __CUcoroutine__ is a simply to use *ucontext.h* realisation of coroutine concurrency.
 
-#### Hello, world!
-```c
+CUCoroutine provides APIs to:
+- run coroutines concurrently
+- perform I/O operations
+- internal coroutine communication
+- perform socket operations
+- threading execution
 
+### Hello, world!
+```c
 #include <stdio.h>
 
 #include <cucoroutine/all.h>
@@ -21,13 +27,15 @@ int main() {
     return 0;
 }
 ```
-
-CUCoroutine provides APIs to:
-- run coroutines concurrently
-- perform I/O operations
-- internal coroutine communication
-- perform socket operations
-- threading execution
+cmake bindings:
+```cmake
+add_subdirectory(cucoroutine)
+target_include_directories(${PROJECT_NAME} PUBLIC cucoroutine/include)
+target_link_libraries(${PROJECT_NAME} cucoroutine)
+```
+## Requirements
+- glib-2.0
+- linux supported ucontext.h
 
 ## Basics
 **Coroutine** is a function can save its condition(called __context__) and return to it after some time. A coroutine must have its own stack, save registers and signals, "*ucontext.h*" library uses for it.
@@ -38,11 +46,9 @@ All coroutines must be finished.
 
 **Reactor** is a coroutine launcher, scheduler, event poller and I/O handler. 
 
-## Requirements
-- glib-2.0
-- linux supported ucontext.h
+
 
 ## Examples
 See examples directory.
-## Docs
-See cucoroutine/docs directory.
+## Documentation
+See docs directory.
