@@ -64,23 +64,24 @@ cu_reactor_init(
     (*reactor)->fd_dict = g_tree_new_full(int_compare, NULL, free, coroutine_array_destroy);
     int rcode = pthread_mutex_init(&((*reactor)->mutex), NULL);
     if (rcode != 0) {
-        goto SCHEDULE_CLEANUP;
+        goto MUTEX_CLEANUP;
     }
     rcode = pthread_cond_init(&((*reactor)->thread_exit), NULL);
     if (rcode != 0) {
-        goto MUTEX_CLEANUP;
+        goto THREAD_EXIT_CLEANUP;
     }
 
     rcode = (*reactor)->epollfd = epoll_create(CU_MAX_FILES);
     if (rcode == -1) {
-        goto THREAD_EXIT_CLEANUP;
+        goto EPOLL_CLEANUP;
     }
     return CU_EOK;
-THREAD_EXIT_CLEANUP:
+    
+EPOLL_CLEANUP:
     pthread_cond_destroy(&(*reactor)->thread_exit);
-MUTEX_CLEANUP:
+THREAD_EXIT_CLEANUP:
     pthread_mutex_destroy(&(*reactor)->mutex);
-SCHEDULE_CLEANUP:
+MUTEX_CLEANUP:
     g_tree_destroy((*reactor)->fd_dict);
     g_tree_destroy((*reactor)->schedule);
     g_array_free((*reactor)->files, TRUE);
