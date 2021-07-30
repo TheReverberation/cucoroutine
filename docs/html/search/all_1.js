@@ -7,7 +7,7 @@ var searchData=
   ['cu_5fasync_5fchan_5fclose_5',['cu_async_chan_close',['../channel_8h.html#a97b45f5470dec34fef11b21f06c9a0b7',1,'channel.h']]],
   ['cu_5fasync_5fchan_5fopen_6',['cu_async_chan_open',['../channel_8h.html#abf28f3c9b6dec3b89f3a8aa3596c5e27',1,'channel.h']]],
   ['cu_5fasync_5fchan_5fread_7',['cu_async_chan_read',['../channel_8h.html#ae2dae6a85323c8358ccf123d159e3a92',1,'channel.h']]],
-  ['cu_5fasync_5fchan_5fwrite_8',['cu_async_chan_write',['../channel_8h.html#a514688da10fd139fe256286a82b6b423',1,'channel.h']]],
+  ['cu_5fasync_5fchan_5fwrite_8',['cu_async_chan_write',['../channel_8h.html#a0efea6ff373928663903bff2afd272d9',1,'channel.h']]],
   ['cu_5fclose_9',['cu_close',['../io_8h.html#a3e91fc828c5570b2245aae2acf9e4566',1,'io.h']]],
   ['cu_5fcoro_5fdestroy_10',['cu_coro_destroy',['../coroutine_8h.html#a164855d909b6ccbde21f090d88a4587c',1,'coroutine.h']]],
   ['cu_5fcreate_11',['cu_create',['../coroutine_8h.html#ac59e823e9f9b097ce44e6feb35ab4f2a',1,'coroutine.h']]],
@@ -25,5 +25,5 @@ var searchData=
   ['cu_5fthread_5fcreate_23',['cu_thread_create',['../thread_8h.html#a080dc3ad318b68b9befed012946de8b8',1,'thread.h']]],
   ['cu_5fwrite_24',['cu_write',['../io_8h.html#a53b6a4796510e1182032b398cbf0b185',1,'io.h']]],
   ['cu_5fyield_5fat_5ftime_25',['cu_yield_at_time',['../reactor_8h.html#ad48f948b8ed3c0a0a65812f6f502af80',1,'reactor.h']]],
-  ['cucoroutine_26',['CUcoroutine',['../md__home_daniiln__code_cuc_cucoroutine__r_e_a_d_m_e.html',1,'']]]
+  ['cucoroutine_26',['CUcoroutine',['../md___users_daniilnedaiborsch__code_cucoroutine__r_e_a_d_m_e.html',1,'']]]
 ];

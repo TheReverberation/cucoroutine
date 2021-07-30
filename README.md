@@ -41,11 +41,12 @@ target_link_libraries(${PROJECT_NAME} cucoroutine)
 **Coroutine** is a function can save its condition(called __context__) and return to it after some time. A coroutine must have its own stack, save registers and signals, "*ucontext.h*" library uses for it.
 
 Coroutine mustn't interrupt execution of reactor for many time. It should execute lightweight operations and yield execution by library's function.
-Coroutine can calls a function that yield to another. 
+Coroutine can calls a function that yield to another.
+This called non-preemptive multitasking, in addition this needn't to synchronization. 
 All coroutines must be finished.
 
 **Reactor** is a coroutine launcher, scheduler, event poller and I/O handler. 
-
+Reactor runs one coroutine at a time only. Then the coroutine yields execution to reactor back by calling library functions such as ```cu_read(), cu_yield_at_time()```.
 
 
 ## Examples

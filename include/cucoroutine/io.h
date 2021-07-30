@@ -11,18 +11,23 @@
 
 
 enum {
-    CU_IN = EPOLLIN, ///< poll input events
-    CU_OUT = EPOLLOUT ///< poll output events
+    CU_IN = EPOLLIN, ///< polling input events
+    CU_OUT = EPOLLOUT ///< polling output events
 };
 
 /*!
  * Adds a file descriptor to polling list.
+ * #cu_add_fd needs before #cu_read, #cu_write operations.
+ * Afters usage, the file must be closed by #cu_close.
+ *
  * @param fd - file descriptor
  * @param opts - no zero opts
  *
  * Flags:
- * - #CU_IN - input events
- * - #CU_OUT - output events
+ * - #CU_IN - polling input events
+ * - #CU_OUT - polling output events
+ *
+ * The flags can be unite by *or* | operator.
  * @param reactor
  * @return on success, returns 0; on error, returns -1 and the error set appropriately.
  */

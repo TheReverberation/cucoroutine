@@ -5,7 +5,7 @@ var searchData=
   ['cu_5fasync_5fchan_5fclose_42',['cu_async_chan_close',['../channel_8h.html#a97b45f5470dec34fef11b21f06c9a0b7',1,'channel.h']]],
   ['cu_5fasync_5fchan_5fopen_43',['cu_async_chan_open',['../channel_8h.html#abf28f3c9b6dec3b89f3a8aa3596c5e27',1,'channel.h']]],
   ['cu_5fasync_5fchan_5fread_44',['cu_async_chan_read',['../channel_8h.html#ae2dae6a85323c8358ccf123d159e3a92',1,'channel.h']]],
-  ['cu_5fasync_5fchan_5fwrite_45',['cu_async_chan_write',['../channel_8h.html#a514688da10fd139fe256286a82b6b423',1,'channel.h']]],
+  ['cu_5fasync_5fchan_5fwrite_45',['cu_async_chan_write',['../channel_8h.html#a0efea6ff373928663903bff2afd272d9',1,'channel.h']]],
   ['cu_5fclose_46',['cu_close',['../io_8h.html#a3e91fc828c5570b2245aae2acf9e4566',1,'io.h']]],
   ['cu_5fcoro_5fdestroy_47',['cu_coro_destroy',['../coroutine_8h.html#a164855d909b6ccbde21f090d88a4587c',1,'coroutine.h']]],
   ['cu_5fcreate_48',['cu_create',['../coroutine_8h.html#ac59e823e9f9b097ce44e6feb35ab4f2a',1,'coroutine.h']]],
